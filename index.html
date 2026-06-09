@@ -1457,6 +1457,104 @@ function vibrate(pattern) {
 }
 
 // ============================================================================
+// STRENGTH PERCENTILES
+// Static snapshot of StrengthLevel one-rep-max standards (adult male, lb),
+// anchored to a ~200 lb bodyweight row (close to Jasper's weight and roughly
+// the average adult male). Values are 1RM at Beginner / Novice / Intermediate /
+// Advanced / Elite, which StrengthLevel defines as "stronger than" 5 / 20 / 50 /
+// 80 / 95% of lifters who log that lift. Pulled June 2026 — easy to edit here.
+// ============================================================================
+const STRENGTH_STD = {
+  bench:    { label: "Bench Press",    pts: [139, 187, 246, 312, 382] },
+  squat:    { label: "Squat",          pts: [186, 248, 323, 408, 499] },
+  deadlift: { label: "Deadlift",       pts: [220, 290, 373, 467, 567] },
+  shoulder: { label: "Shoulder Press", pts: [86, 119, 160, 207, 257] },
+  row:      { label: "Bent-Over Row",  pts: [117, 160, 213, 274, 338] },
+  curl:     { label: "Barbell Curl",   pts: [50, 80, 118, 163, 213] }
+};
+
+// Map app exercises to a standard. `factor` scales the logged load to a
+// barbell-equivalent before estimating 1RM (dumbbells are logged per hand → ×2).
+// `approx` flags loose comparisons (DB vs barbell, Smith vs free, etc.).
+const STD_MAP = {
+  "DB Bench Press":           { std: "bench",    factor: 2, approx: true },
+  "Smith Bench Press (flat)": { std: "bench",    factor: 1, approx: true },
+  "Seated DB Shoulder Press": { std: "shoulder", factor: 2, approx: true },
+  "Back Squat":               { std: "squat",    factor: 1, approx: false },
+  "Hex Bar Deadlift":         { std: "deadlift", factor: 1, approx: true },
+  "Bent Barbell Row":         { std: "row",      factor: 1, approx: false },
+  "Barbell or DB Curl":       { std: "curl",     factor: 1, approx: true }
+};
+
+function formatTopPct(tp) {
+  if (tp >= 10) return "Top " + Math.round(tp) + "%";
+  if (tp >= 1)  return "Top " + Math.round(tp) + "%";
+  if (tp >= 0.1) return "Top " + tp.toFixed(1) + "%";
+  return "Top 0.1%";
+}
+
+function strengthPercentile(e1rm, stdKey) {
+  const std = STRENGTH_STD[stdKey];
+  if (!std || !e1rm) return null;
+  const [beg, nov, int_, adv, elite] = std.pts;
+  // (strongerThan%, weight) anchors, extrapolated a little past Elite
+  const a = [
+    { st: 1,    w: beg * 0.6 },
+    { st: 5,    w: beg },
+    { st: 20,   w: nov },
+    { st: 50,   w: int_ },
+    { st: 80,   w: adv },
+    { st: 95,   w: elite },
+    { st: 99,   w: elite + (elite - adv) * 1.1 },
+    { st: 99.9, w: elite + (elite - adv) * 2.4 }
+  ];
+  let st;
+  if (e1rm <= a[0].w) {
+    st = Math.max(0.3, a[0].st * (e1rm / a[0].w));
+  } else if (e1rm >= a[a.length - 1].w) {
+    st = 99.9;
+  } else {
+    for (let i = 0; i < a.length - 1; i++) {
+      if (e1rm >= a[i].w && e1rm <= a[i + 1].w) {
+        const f = (e1rm - a[i].w) / (a[i + 1].w - a[i].w);
+        st = a[i].st + f * (a[i + 1].st - a[i].st);
+        break;
+      }
+    }
+  }
+  let level = "Untrained";
+  if (e1rm >= elite) level = "Elite";
+  else if (e1rm >= adv) level = "Advanced";
+  else if (e1rm >= int_) level = "Intermediate";
+  else if (e1rm >= nov) level = "Novice";
+  else if (e1rm >= beg) level = "Beginner";
+  const topPct = Math.min(99.9, Math.max(0.1, 100 - st));
+  return { level, topPct, label: formatTopPct(topPct) };
+}
+
+// For a completed workout, return percentile info for each mapped lift performed.
+function workoutPercentiles(w) {
+  const out = [];
+  const seen = new Set();
+  w.exercises.forEach(ex => {
+    const map = STD_MAP[ex.name];
+    if (!map || seen.has(ex.name)) return;
+    const logged = ex.sets.filter(s => s.logged);
+    if (!logged.length) return;
+    let bestE1 = 0;
+    logged.forEach(s => {
+      const e1 = est1RM(s.weight * map.factor, s.reps);
+      if (e1 > bestE1) bestE1 = e1;
+    });
+    const pc = strengthPercentile(bestE1, map.std);
+    if (!pc) return;
+    seen.add(ex.name);
+    out.push({ name: ex.name, stdLabel: STRENGTH_STD[map.std].label, e1: bestE1, approx: map.approx, ...pc });
+  });
+  return out;
+}
+
+// ============================================================================
 // LAST SESSION LOOKUP & DOUBLE PROGRESSION
 // ============================================================================
 function findLastForExercise(dayKey, exerciseName) {
@@ -1639,6 +1737,30 @@ function showWorkoutSummary(w) {
       </div>
     ` : ""}
 
+    ${(() => {
+      const pcs = workoutPercentiles(w);
+      if (!pcs.length) return "";
+      return `
+        <div class="card">
+          <div class="card-title">Strength Percentile</div>
+          <div class="small" style="color: var(--text-dim); margin-bottom: 10px;">
+            Best est. 1RM today vs. other lifters who log this lift (StrengthLevel data, adult‑male ~200&nbsp;lb basis). For fun — not a verdict.
+          </div>
+          ${pcs.map(p => `
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+                <div style="font-weight: 600; font-size: 15px;">${p.name}</div>
+                <div class="accent-text" style="font-weight: 700; white-space: nowrap;">${p.label}</div>
+              </div>
+              <div class="small mono" style="margin-top: 2px;">
+                ${p.stdLabel}${p.approx ? " (approx)" : ""} · est 1RM ${p.e1} lb · ${p.level}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    })()}
+
     <button class="btn" onclick="renderToday()">Back to Today</button>
   `;
 }
@@ -1671,16 +1793,22 @@ function discardWorkout() {
 // REST TIMER
 // ============================================================================
 let timerState = {
-  remaining: 0,
-  target: 0,
+  endTime: 0,      // wall-clock ms (Date.now) when the rest period ends
+  target: 0,       // total seconds (for the "Target" label)
   intervalId: null,
-  active: false
+  active: false,
+  finished: false  // guard so the buzz/flash fires only once
 };
 
+function timerRemaining() {
+  return Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
+}
+
 function startTimer(seconds) {
-  timerState.remaining = seconds;
   timerState.target = seconds;
+  timerState.endTime = Date.now() + seconds * 1000;   // anchored to the real clock
   timerState.active = true;
+  timerState.finished = false;
 
   const overlay = document.getElementById("timerOverlay");
   overlay.classList.add("show");
@@ -1689,27 +1817,26 @@ function startTimer(seconds) {
   updateTimerDisplay();
 
   if (timerState.intervalId) clearInterval(timerState.intervalId);
-  timerState.intervalId = setInterval(tickTimer, 1000);
+  timerState.intervalId = setInterval(tickTimer, 250);
 }
 
 function tickTimer() {
-  timerState.remaining--;
-  if (timerState.remaining <= 0) {
-    finishTimer();
-    return;
-  }
+  if (!timerState.active) return;
   updateTimerDisplay();
+  if (timerRemaining() <= 0) finishTimer();
 }
 
 function updateTimerDisplay() {
-  document.getElementById("timerDisplay").textContent = fmtMMSS(Math.max(0, timerState.remaining));
+  const el = document.getElementById("timerDisplay");
+  if (el) el.textContent = fmtMMSS(timerRemaining());
 }
 
 function finishTimer() {
+  if (timerState.finished) return;   // fire once only
+  timerState.finished = true;
   if (timerState.intervalId) clearInterval(timerState.intervalId);
   timerState.intervalId = null;
   timerState.active = false;
-  timerState.remaining = 0;
   updateTimerDisplay();
 
   const overlay = document.getElementById("timerOverlay");
@@ -1725,15 +1852,28 @@ function skipTimer() {
   if (timerState.intervalId) clearInterval(timerState.intervalId);
   timerState.intervalId = null;
   timerState.active = false;
+  timerState.finished = true;
   document.getElementById("timerOverlay").classList.remove("show", "done", "flash");
 }
 
 function addTime() {
-  timerState.remaining += 30;
+  timerState.endTime += 30000;
   timerState.target += 30;
   document.getElementById("timerTarget").textContent = "Target: " + fmtMMSS(timerState.target);
   updateTimerDisplay();
 }
+
+// When the app/screen comes back to the foreground, reconcile against the real
+// clock: JS pauses while backgrounded, so recompute from endTime and fire the
+// alert immediately if the rest period elapsed while we were away.
+function reconcileTimer() {
+  if (!timerState.active) return;
+  updateTimerDisplay();
+  if (timerRemaining() <= 0) finishTimer();
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) reconcileTimer(); });
+window.addEventListener("focus", reconcileTimer);
+window.addEventListener("pageshow", reconcileTimer);
 
 document.getElementById("timerSkip").addEventListener("click", skipTimer);
 document.getElementById("timerAdd").addEventListener("click", addTime);
@@ -2019,6 +2159,7 @@ function renderExerciseCard(ex, idx, isCurrent) {
     ? `${lastDropObj.weight} lb × ${lastDropObj.reps}${lastDropObj.rir != null ? ' @ RIR ' + lastDropObj.rir : ''}`
     : null;
   const drop = ex.dropSet || { logged: false };
+  const dropDone = drop.logged || drop.skipped;
 
   return `
     <div class="exercise ${isCurrent ? 'current' : ''} ${isDone ? 'done' : ''} ${isOpen ? 'open' : ''} ${tier ? 'tier-' + tier : ''}" data-idx="${idx}">
@@ -2083,8 +2224,8 @@ function renderExerciseCard(ex, idx, isCurrent) {
         }).join("")}
 
         <div class="drop-set">
-          <div class="drop-set-label">Drop Set <span>· optional</span></div>
-          <div class="set-row drop-row ${drop.logged ? 'logged' : ''}" data-droprow="${idx}">
+          <div class="drop-set-label">Drop Set <span>· ${drop.logged ? 'logged' : (drop.skipped ? 'skipped' : 'optional')}</span></div>
+          <div class="set-row drop-row ${dropDone ? 'logged' : ''}" data-droprow="${idx}">
             <div class="set-num drop-badge">D</div>
             <input class="set-input" type="number" inputmode="decimal" placeholder="lighter" value="${drop.weight ?? ''}" data-dfield="weight">
             <input class="set-input" type="number" inputmode="numeric" placeholder="to fail" value="${drop.reps ?? ''}" data-dfield="reps">
@@ -2094,9 +2235,9 @@ function renderExerciseCard(ex, idx, isCurrent) {
               <option value="1" ${drop.rir === 1 ? 'selected' : ''}>1</option>
               <option value="2" ${drop.rir === 2 ? 'selected' : ''}>2</option>
             </select>
-            <button class="log-btn ${drop.logged ? 'logged' : ''}" data-drop="${idx}">${drop.logged ? '✓' : '+'}</button>
+            <button class="log-btn ${dropDone ? 'logged' : ''}" data-drop="${idx}">${dropDone ? '✓' : '+'}</button>
           </div>
-          ${lastDrop ? `<div class="set-last">Last drop: ${lastDrop}</div>` : ''}
+          <div class="set-last" style="opacity:.7">${lastDrop ? `Last drop: ${lastDrop}` : 'Tap ✓ to finish — leave blank to skip'}</div>
         </div>
 
         <textarea class="ex-notes-input" placeholder="Notes (form cues, pain, swaps...)" data-notes="${idx}">${ex.notes || ''}</textarea>
@@ -2155,7 +2296,7 @@ function wireExerciseListeners() {
     });
   });
 
-  // Drop set log button
+  // Drop set / finisher button — never required. Tapping it finishes the exercise.
   document.querySelectorAll("[data-drop]").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -2166,19 +2307,21 @@ function wireExerciseListeners() {
       const rirVal = row.querySelector("[data-dfield='rir']").value;
       const rir = rirVal === "" ? null : parseInt(rirVal);
 
-      if (!weight || !reps) {
-        toast("Enter drop set weight and reps");
-        return;
+      if (weight && reps) {
+        state.current.exercises[exIdx].dropSet = { weight, reps, rir, logged: true, skipped: false };
+        toast(`Drop set logged · ${weight} × ${reps}`);
+      } else {
+        // No data entered — acknowledge as complete (green) without storing numbers
+        state.current.exercises[exIdx].dropSet = { weight: null, reps: null, rir: null, logged: false, skipped: true };
+        toast("Exercise complete");
       }
-
-      state.current.exercises[exIdx].dropSet = { weight, reps, rir, logged: true };
-      justCompletedExIdx = null;
+      justCompletedExIdx = null;   // collapse this card and advance to the next exercise
       saveState();
       btn.classList.add("logged");
       btn.textContent = "✓";
       row.classList.add("logged");
       vibrate(40);
-      toast(`Drop set logged · ${weight} × ${reps}`);
+      setTimeout(() => renderToday(), 350);   // brief green flash, then minimize + open next
     });
   });
 
@@ -3025,6 +3168,24 @@ function renderRun() {
     });
   });
 
+  // Auto-format the time field: type digits, the colon appears for you.
+  // "4922" -> "49:22"; five+ digits -> H:MM:SS.
+  const runTimeEl = document.getElementById("runTime");
+  if (runTimeEl) {
+    runTimeEl.addEventListener("input", () => {
+      let d = runTimeEl.value.replace(/\D/g, "").slice(0, 6);
+      let out;
+      if (d.length <= 2) {
+        out = d;
+      } else if (d.length <= 4) {
+        out = d.slice(0, d.length - 2) + ":" + d.slice(-2);
+      } else {
+        out = d.slice(0, d.length - 4) + ":" + d.slice(-4, -2) + ":" + d.slice(-2);
+      }
+      runTimeEl.value = out;
+    });
+  }
+
   document.getElementById("runLog").addEventListener("click", () => {
     const dist = parseFloat(document.getElementById("runDist").value) || null;
     const timeStr = document.getElementById("runTime").value.trim();
@@ -3117,7 +3278,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v8
+      Lift Log · v9
     </div>
   `;
 
