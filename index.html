@@ -1192,12 +1192,12 @@ const PLAN = {
     subtitle: "",
     exercises: [
       { name: "Back Squat / Hex Bar DL", sets: 3, repsLow: 4, repsHigh: 6, restSec: 270, isCompound: true, rirHint: "RIR 0-1 top set", notes: "Alternate weekly. Brace via exhale-through-pursed-lips. Belt allowed on top set." },
+      { name: "Romanian Deadlift", sets: 3, repsLow: 8, repsHigh: 10, restSec: 120, isCompound: true, rirHint: "Hamstring stretch focus", notes: "DB or BB. Same platform — keep the bar." },
+      { name: "Standing Calf Raise", sets: 2, repsLow: 8, repsHigh: 12, restSec: 75, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Gastrocnemius — knee straight. Still on the platform: finish here before moving stations." },
       { name: "Leg Press", sets: 3, repsLow: 8, repsHigh: 12, restSec: 150, isCompound: true, rirHint: "Last set drop", notes: "Full ROM. Drop 25% rep out again." },
-      { name: "Romanian Deadlift", sets: 3, repsLow: 8, repsHigh: 10, restSec: 120, isCompound: true, rirHint: "Hamstring stretch focus", notes: "DB or BB." },
+      { name: "Seated Calf Raise", sets: 2, repsLow: 10, repsHigh: 15, restSec: 60, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Soleus — bent knee. Same area as leg press. Key for running economy & plantar fascia." },
       { name: "Seated Leg Curl", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "RIR 1", notes: "Hamstring volume bumped to 3 sets for quad:ham balance." },
-      { name: "Leg Extension", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Pause 1s at top." },
-      { name: "Standing Calf Raise", sets: 2, repsLow: 8, repsHigh: 12, restSec: 75, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Gastrocnemius — knee straight." },
-      { name: "Seated Calf Raise", sets: 2, repsLow: 10, repsHigh: 15, restSec: 60, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Soleus — bent knee. Key for running economy & plantar fascia." }
+      { name: "Leg Extension", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Pause 1s at top." }
     ],
     hasCore: true
   },
@@ -1340,10 +1340,10 @@ const STRETCHES = [
 // CORE ROUTINE (Wed + Fri, checklist) — from plan §6
 // ============================================================================
 const CORE = [
-  "Hanging Leg Raise (3 × 8–12) — anti-extension",
-  "Pallof Press, cable (2 × 10/side) — anti-rotation, hernia-friendly",
-  "Plank (2 × 45–60s) — anti-extension",
-  "Cable Woodchop (2 × 10/side) — rotation, controlled"
+  "Hanging Leg Raise (3 × 8–12) — anti-extension; hold a DB between the feet to load",
+  "Weighted Suitcase Carry (2 × 30–40 yd/side) — anti-lateral flexion; one heavy DB, brace and walk tall",
+  "Plank (2 × 45–60s) — anti-extension; set a plate on your back to progress",
+  "Weighted Russian Twist (2 × 12/side) — rotation; hold a DB or plate, controlled tempo"
 ];
 
 // ============================================================================
@@ -1417,13 +1417,21 @@ let state = loadState();
 // ============================================================================
 // UTILITIES
 // ============================================================================
+// Parse "YYYY-MM-DD" as a LOCAL date. new Date("2026-06-09") is interpreted as
+// UTC midnight, which displays as June 8 in US time zones — that was the
+// check-in date glitch. Full ISO timestamps still parse normally.
+function parseLocalDate(d) {
+  if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [y, m, day] = d.split("-").map(Number);
+    return new Date(y, m - 1, day);
+  }
+  return new Date(d);
+}
 function fmtDate(d) {
-  const date = new Date(d);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return parseLocalDate(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 function fmtDateLong(d) {
-  const date = new Date(d);
-  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  return parseLocalDate(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 function fmtTimeAgo(iso) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -1431,8 +1439,19 @@ function fmtTimeAgo(iso) {
   if (diff < 86400) return Math.floor(diff/3600) + "h ago";
   return Math.floor(diff/86400) + "d ago";
 }
+function localIsoDate(input) {
+  // LOCAL calendar date for any date/timestamp, not UTC. toISOString() flips
+  // to tomorrow after ~7 PM in Green Bay, which stamped evening check-ins
+  // (and CSV-exported evening workouts) with the next day's date.
+  const d = input ? new Date(input) : new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
 function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
+  return localIsoDate();
+}
+// Escape user-typed text before injecting into HTML (notes, reflections).
+function esc(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 function fmtMMSS(sec) {
   const m = Math.floor(sec / 60);
@@ -1457,49 +1476,52 @@ function vibrate(pattern) {
 }
 
 // ============================================================================
-// STRENGTH PERCENTILES
-// Static snapshot of StrengthLevel one-rep-max standards (adult male, lb),
-// anchored to a ~200 lb bodyweight row (close to Jasper's weight and roughly
-// the average adult male). Values are 1RM at Beginner / Novice / Intermediate /
-// Advanced / Elite, which StrengthLevel defines as "stronger than" 5 / 20 / 50 /
-// 80 / 95% of lifters who log that lift. Pulled June 2026 — easy to edit here.
+// STRENGTH PERCENTILES — vs ALL GYM-GOERS
+// Static snapshot of StrengthLevel one-rep-max standards (overall adult male
+// and female, lb — these "overall" rows already average across bodyweights).
+// Anchors are 1RM at Beginner/Novice/Intermediate/Advanced/Elite = stronger
+// than 5/20/50/80/95% of lifters who log that lift. Pulled June 2026.
+//
+// The comparison population is modeled as "everyone at the gym":
+//   - GYM_POP.femaleShare : fraction of gym-goers who are women
+//   - GYM_POP.casualShare : fraction (within each sex) who don't seriously
+//       train barbell lifts — modeled as ~30% weaker at the same percentile
+// Tweak these constants to make the scale harder or easier.
 // ============================================================================
+const GYM_POP = { femaleShare: 0.5, casualShare: 0.5, casualFactor: 1.45 };
+
 const STRENGTH_STD = {
-  bench:    { label: "Bench Press",    pts: [139, 187, 246, 312, 382] },
-  squat:    { label: "Squat",          pts: [186, 248, 323, 408, 499] },
-  deadlift: { label: "Deadlift",       pts: [220, 290, 373, 467, 567] },
-  shoulder: { label: "Shoulder Press", pts: [86, 119, 160, 207, 257] },
-  row:      { label: "Bent-Over Row",  pts: [117, 160, 213, 274, 338] },
-  curl:     { label: "Barbell Curl",   pts: [50, 80, 118, 163, 213] }
+  bench:    { label: "Bench Press",    male: [103, 154, 217, 291, 372], female: [38, 69, 111, 164, 223] },
+  squat:    { label: "Squat",          male: [141, 206, 287, 381, 483], female: [65, 107, 161, 227, 300] },
+  deadlift: { label: "Deadlift",       male: [173, 246, 336, 440, 552], female: [84, 132, 193, 265, 345] },
+  shoulder: { label: "Shoulder Press", male: [66, 99, 142, 192, 248],   female: [28, 48, 75, 107, 143] },
+  row:      { label: "Bent-Over Row",  male: [89, 133, 188, 253, 323],  female: [34, 58, 91, 130, 175] },
+  curl:     { label: "Barbell Curl",   male: [38, 66, 103, 149, 201],   female: [14, 31, 54, 85, 120] }
 };
 
 // Map app exercises to a standard. `factor` scales the logged load to a
 // barbell-equivalent before estimating 1RM (dumbbells are logged per hand → ×2).
-// `approx` flags loose comparisons (DB vs barbell, Smith vs free, etc.).
 const STD_MAP = {
-  "DB Bench Press":           { std: "bench",    factor: 2, approx: true },
-  "Smith Bench Press (flat)": { std: "bench",    factor: 1, approx: true },
-  "Seated DB Shoulder Press": { std: "shoulder", factor: 2, approx: true },
-  "Back Squat":               { std: "squat",    factor: 1, approx: false },
-  "Hex Bar Deadlift":         { std: "deadlift", factor: 1, approx: true },
-  "Bent Barbell Row":         { std: "row",      factor: 1, approx: false },
-  "Barbell or DB Curl":       { std: "curl",     factor: 1, approx: true }
+  "DB Bench Press":           { std: "bench",    factor: 2 },
+  "Smith Bench Press (flat)": { std: "bench",    factor: 1 },
+  "Seated DB Shoulder Press": { std: "shoulder", factor: 2 },
+  "Back Squat":               { std: "squat",    factor: 1 },
+  "Hex Bar Deadlift":         { std: "deadlift", factor: 1 },
+  "Bent Barbell Row":         { std: "row",      factor: 1 },
+  "Barbell or DB Curl":       { std: "curl",     factor: 1 }
 };
 
 function formatTopPct(tp) {
-  if (tp >= 10) return "Top " + Math.round(tp) + "%";
-  if (tp >= 1)  return "Top " + Math.round(tp) + "%";
-  if (tp >= 0.1) return "Top " + tp.toFixed(1) + "%";
+  if (tp >= 1) return "Top " + Math.round(tp) + "%";
+  if (tp >= 0.2) return "Top " + tp.toFixed(1) + "%";
   return "Top 0.1%";
 }
 
-function strengthPercentile(e1rm, stdKey) {
-  const std = STRENGTH_STD[stdKey];
-  if (!std || !e1rm) return null;
-  const [beg, nov, int_, adv, elite] = std.pts;
-  // (strongerThan%, weight) anchors, extrapolated a little past Elite
+// "Stronger than" % within one anchor set, with extrapolation past Elite.
+function cdfFromAnchors(x, pts) {
+  const [beg, nov, int_, adv, elite] = pts;
   const a = [
-    { st: 1,    w: beg * 0.6 },
+    { st: 1,    w: beg * 0.55 },
     { st: 5,    w: beg },
     { st: 20,   w: nov },
     { st: 50,   w: int_ },
@@ -1508,28 +1530,30 @@ function strengthPercentile(e1rm, stdKey) {
     { st: 99,   w: elite + (elite - adv) * 1.1 },
     { st: 99.9, w: elite + (elite - adv) * 2.4 }
   ];
-  let st;
-  if (e1rm <= a[0].w) {
-    st = Math.max(0.3, a[0].st * (e1rm / a[0].w));
-  } else if (e1rm >= a[a.length - 1].w) {
-    st = 99.9;
-  } else {
-    for (let i = 0; i < a.length - 1; i++) {
-      if (e1rm >= a[i].w && e1rm <= a[i + 1].w) {
-        const f = (e1rm - a[i].w) / (a[i + 1].w - a[i].w);
-        st = a[i].st + f * (a[i + 1].st - a[i].st);
-        break;
-      }
+  if (x <= a[0].w) return Math.max(0.2, a[0].st * (x / a[0].w));
+  if (x >= a[a.length - 1].w) return 99.95;
+  for (let i = 0; i < a.length - 1; i++) {
+    if (x >= a[i].w && x <= a[i + 1].w) {
+      const f = (x - a[i].w) / (a[i + 1].w - a[i].w);
+      return a[i].st + f * (a[i + 1].st - a[i].st);
     }
   }
-  let level = "Untrained";
-  if (e1rm >= elite) level = "Elite";
-  else if (e1rm >= adv) level = "Advanced";
-  else if (e1rm >= int_) level = "Intermediate";
-  else if (e1rm >= nov) level = "Novice";
-  else if (e1rm >= beg) level = "Beginner";
-  const topPct = Math.min(99.9, Math.max(0.1, 100 - st));
-  return { level, topPct, label: formatTopPct(topPct) };
+  return 50;
+}
+
+function strengthPercentile(e1rm, stdKey) {
+  const std = STRENGTH_STD[stdKey];
+  if (!std || !e1rm) return null;
+  // Within each sex: blend dedicated lifters with casuals (who lift ~30% less
+  // at the same percentile — modeled by evaluating the lifter curve at x×1.45).
+  const sexMix = (pts) =>
+    (1 - GYM_POP.casualShare) * cdfFromAnchors(e1rm, pts) +
+    GYM_POP.casualShare * cdfFromAnchors(e1rm * GYM_POP.casualFactor, pts);
+  const strongerThan =
+    (1 - GYM_POP.femaleShare) * sexMix(std.male) +
+    GYM_POP.femaleShare * sexMix(std.female);
+  const topPct = Math.min(99, Math.max(0.1, 100 - strongerThan));
+  return { topPct, label: formatTopPct(topPct) };
 }
 
 // For a completed workout, return percentile info for each mapped lift performed.
@@ -1549,7 +1573,7 @@ function workoutPercentiles(w) {
     const pc = strengthPercentile(bestE1, map.std);
     if (!pc) return;
     seen.add(ex.name);
-    out.push({ name: ex.name, stdLabel: STRENGTH_STD[map.std].label, e1: bestE1, approx: map.approx, ...pc });
+    out.push({ name: ex.name, stdLabel: STRENGTH_STD[map.std].label, e1: bestE1, ...pc });
   });
   return out;
 }
@@ -1742,18 +1766,18 @@ function showWorkoutSummary(w) {
       if (!pcs.length) return "";
       return `
         <div class="card">
-          <div class="card-title">Strength Percentile</div>
+          <div class="card-title">How You Stack Up</div>
           <div class="small" style="color: var(--text-dim); margin-bottom: 10px;">
-            Best est. 1RM today vs. other lifters who log this lift (StrengthLevel data, adult‑male ~200&nbsp;lb basis). For fun — not a verdict.
+            Best est. 1RM today vs. everyone at the gym — all sexes, sizes, and experience levels. Estimated, for fun.
           </div>
           ${pcs.map(p => `
             <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
               <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
                 <div style="font-weight: 600; font-size: 15px;">${p.name}</div>
-                <div class="accent-text" style="font-weight: 700; white-space: nowrap;">${p.label}</div>
+                <div class="accent-text" style="font-weight: 700; white-space: nowrap;">${p.label} of all gym-goers</div>
               </div>
               <div class="small mono" style="margin-top: 2px;">
-                ${p.stdLabel}${p.approx ? " (approx)" : ""} · est 1RM ${p.e1} lb · ${p.level}
+                ${p.stdLabel} basis · est 1RM ${p.e1} lb
               </div>
             </div>
           `).join("")}
@@ -1792,6 +1816,9 @@ function discardWorkout() {
 // ============================================================================
 // REST TIMER
 // ============================================================================
+let activeView = "today";          // which tab is showing (for day-rollover refresh)
+let lastRenderDay = null;          // local date the active view was last rendered
+
 let timerState = {
   endTime: 0,      // wall-clock ms (Date.now) when the rest period ends
   target: 0,       // total seconds (for the "Target" label)
@@ -1818,6 +1845,7 @@ function startTimer(seconds) {
 
   if (timerState.intervalId) clearInterval(timerState.intervalId);
   timerState.intervalId = setInterval(tickTimer, 250);
+  acquireWakeLock();
 }
 
 function tickTimer() {
@@ -1843,6 +1871,7 @@ function finishTimer() {
   overlay.classList.add("done", "flash");
   vibrate([300, 100, 300, 100, 300]);
 
+  releaseWakeLock();
   setTimeout(() => {
     overlay.classList.remove("show", "flash", "done");
   }, 2000);
@@ -1853,6 +1882,7 @@ function skipTimer() {
   timerState.intervalId = null;
   timerState.active = false;
   timerState.finished = true;
+  releaseWakeLock();
   document.getElementById("timerOverlay").classList.remove("show", "done", "flash");
 }
 
@@ -1863,6 +1893,20 @@ function addTime() {
   updateTimerDisplay();
 }
 
+// Keep the screen awake while a rest timer runs so the buzz/flash fires on
+// time (otherwise iOS may sleep the screen and suspend the page). Auto-released
+// by the OS when the app is hidden; we re-acquire on return if still resting.
+let wakeLock = null;
+async function acquireWakeLock() {
+  try {
+    if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+  } catch (e) { /* not supported or denied — timer still reconciles on return */ }
+}
+function releaseWakeLock() {
+  try { if (wakeLock) wakeLock.release(); } catch (e) {}
+  wakeLock = null;
+}
+
 // When the app/screen comes back to the foreground, reconcile against the real
 // clock: JS pauses while backgrounded, so recompute from endTime and fire the
 // alert immediately if the rest period elapsed while we were away.
@@ -1870,10 +1914,22 @@ function reconcileTimer() {
   if (!timerState.active) return;
   updateTimerDisplay();
   if (timerRemaining() <= 0) finishTimer();
+  else acquireWakeLock();
 }
-document.addEventListener("visibilitychange", () => { if (!document.hidden) reconcileTimer(); });
-window.addEventListener("focus", reconcileTimer);
-window.addEventListener("pageshow", reconcileTimer);
+
+// PWAs stay suspended for days: a view rendered "yesterday" still shows
+// yesterday's date, recommended lift, and check-in form. On return, if the
+// calendar day changed, re-render the active view fresh.
+function onAppForeground() {
+  reconcileTimer();
+  if (todayIsoDate() !== lastRenderDay) {
+    lastRenderDay = todayIsoDate();
+    switchView(activeView);
+  }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) onAppForeground(); });
+window.addEventListener("focus", onAppForeground);
+window.addEventListener("pageshow", onAppForeground);
 
 document.getElementById("timerSkip").addEventListener("click", skipTimer);
 document.getElementById("timerAdd").addEventListener("click", addTime);
@@ -2022,7 +2078,7 @@ function renderActiveWorkout(cont) {
     ${PLAN[w.dayKey] && PLAN[w.dayKey].hasCore ? `
       <div class="card">
         <div class="card-title">Core Work <span style="color: var(--text-dim); letter-spacing: 0; text-transform: none; font-weight: 500;">· ~10 min</span></div>
-        <div class="small" style="margin-bottom: 10px;">Tap to check off. Hernia-friendly anti-rotation focus.</div>
+        <div class="small" style="margin-bottom: 10px;">Tap to check off. Loaded & bodyweight — anti-extension, carries, rotation.</div>
         <div class="stretches-list">
           ${CORE.map((c, i) => `
             <label class="stretch-item ${w.core && w.core[c] ? 'checked' : ''}" data-core="${i}">
@@ -2037,7 +2093,10 @@ function renderActiveWorkout(cont) {
 
     <div class="card">
       <div class="card-title">Stretching</div>
-      <div class="small" style="margin-bottom: 10px;">Post-lift routine. Tap to check off.</div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px;">
+        <div class="small">Post-lift routine. Tap to check off.</div>
+        <button class="btn btn-xs btn-ghost" id="stretchToggleAll" style="width:auto; flex-shrink:0;">${STRETCHES.every(s => w.stretches[s]) ? 'Clear all' : 'Check all'}</button>
+      </div>
       <div class="stretches-list">
         ${STRETCHES.map((s, i) => `
           <label class="stretch-item ${w.stretches[s] ? 'checked' : ''}" data-stretch="${i}">
@@ -2052,7 +2111,7 @@ function renderActiveWorkout(cont) {
     <div class="card">
       <div class="card-title">Add-On Lifts</div>
       <div class="small" style="margin-bottom: 8px;">Anything extra you got pulled into. Not tracked in charts.</div>
-      <textarea class="addons-box" id="addonsBox" placeholder="e.g. Did 3×8 BB shrugs with a buddy, 2×10 face pulls...">${w.addons || ''}</textarea>
+      <textarea class="addons-box" id="addonsBox" placeholder="e.g. Did 3×8 BB shrugs with a buddy, 2×10 face pulls...">${esc(w.addons || '')}</textarea>
     </div>
 
     ${doneEx === totalEx ? `
@@ -2083,6 +2142,29 @@ function renderActiveWorkout(cont) {
 }
 
 function wireStretchListeners() {
+  const toggleAll = document.getElementById("stretchToggleAll");
+  if (toggleAll) {
+    toggleAll.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const allChecked = STRETCHES.every(s => state.current.stretches[s]);
+      if (allChecked) {
+        state.current.stretches = {};
+      } else {
+        STRETCHES.forEach(s => { state.current.stretches[s] = true; });
+        vibrate(20);
+      }
+      saveState();
+      // Re-sync the checkboxes + button label without a full re-render
+      document.querySelectorAll("[data-stretch]").forEach(label => {
+        const name = STRETCHES[parseInt(label.dataset.stretch)];
+        const on = !!state.current.stretches[name];
+        label.classList.toggle("checked", on);
+        const cb = label.querySelector("input"); if (cb) cb.checked = on;
+      });
+      toggleAll.textContent = allChecked ? "Check all" : "Clear all";
+    });
+  }
   document.querySelectorAll("[data-stretch]").forEach(label => {
     label.addEventListener("click", (e) => {
       e.preventDefault();
@@ -2098,6 +2180,8 @@ function wireStretchListeners() {
         label.querySelector("input").checked = true;
         vibrate(20);
       }
+      const tgl = document.getElementById("stretchToggleAll");
+      if (tgl) tgl.textContent = STRETCHES.every(s => state.current.stretches[s]) ? "Clear all" : "Check all";
       saveState();
     });
   });
@@ -2206,8 +2290,8 @@ function renderExerciseCard(ex, idx, isCurrent) {
           <div class="set-wrap">
             <div class="set-row ${set.logged ? 'logged' : ''}" data-set="${idx}-${sIdx}">
               <div class="set-num">${set.idx}</div>
-              <input class="set-input" type="number" inputmode="decimal" placeholder="${suggestion && sIdx === 0 ? suggestion.weight : '-'}" value="${set.weight ?? ''}" data-field="weight">
-              <input class="set-input" type="number" inputmode="numeric" placeholder="${suggestion && sIdx === 0 ? suggestion.reps : (def.repsLow + '-' + def.repsHigh)}" value="${set.reps ?? ''}" data-field="reps">
+              <input class="set-input" type="number" inputmode="decimal" placeholder="${prev ? prev.weight : (suggestion && sIdx === 0 ? suggestion.weight : '-')}" value="${set.weight ?? ''}" data-field="weight">
+              <input class="set-input" type="number" inputmode="numeric" placeholder="${def.repsLow === 0 ? 'AMRAP' : def.repsLow + '-' + def.repsHigh}" value="${set.reps ?? ''}" data-field="reps">
               <select class="rir-select" data-field="rir">
                 <option value="">RIR</option>
                 <option value="0" ${set.rir === 0 ? 'selected' : ''}>0</option>
@@ -2240,7 +2324,7 @@ function renderExerciseCard(ex, idx, isCurrent) {
           <div class="set-last" style="opacity:.7">${lastDrop ? `Last drop: ${lastDrop}` : 'Tap ✓ to finish — leave blank to skip'}</div>
         </div>
 
-        <textarea class="ex-notes-input" placeholder="Notes (form cues, pain, swaps...)" data-notes="${idx}">${ex.notes || ''}</textarea>
+        <textarea class="ex-notes-input" placeholder="Notes (form cues, pain, swaps...)" data-notes="${idx}">${esc(ex.notes || '')}</textarea>
         ${def.restSec ? `
           <button class="btn btn-outline btn-sm" style="margin-top: 10px;" data-rest="${def.restSec}">
             Start Rest Timer (${fmtMMSS(def.restSec)})
@@ -2799,6 +2883,7 @@ function readinessSignal(c) {
   if (c.hrv != null) {
     const recent = state.dailyCheckins
       .filter(x => x.hrv != null && x.date < c.date)
+      .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-14);
     if (recent.length >= 5) {
       const avg = recent.reduce((s, x) => s + x.hrv, 0) / recent.length;
@@ -2876,7 +2961,7 @@ function renderDaily() {
 
       <div style="margin-top: 14px;">
         <div class="form-label">Notes / Reflection</div>
-        <textarea class="ex-notes-input" id="ciNotes" placeholder="How you're feeling, soreness, mood, plans, anything worth recalling..." style="min-height: 80px;">${today?.notes ?? ''}</textarea>
+        <textarea class="ex-notes-input" id="ciNotes" placeholder="How you're feeling, soreness, mood, plans, anything worth recalling..." style="min-height: 80px;">${esc(today?.notes ?? '')}</textarea>
       </div>
 
       <button class="btn" id="ciSave" style="margin-top: 14px;">${today ? 'Update Check-In' : 'Save Check-In'}</button>
@@ -2913,7 +2998,7 @@ function renderDaily() {
               ${c.steps != null ? `<span>${c.steps.toLocaleString()} steps</span>` : ''}
               ${c.hydration ? `<span class="hyd-tag hyd-${c.hydration}">${c.hydration}</span>` : ''}
             </div>
-            ${c.notes ? `<div class="small" style="margin-top: 6px; color: var(--text-dim); font-style: italic;">"${c.notes}"</div>` : ''}
+            ${c.notes ? `<div class="small" style="margin-top: 6px; color: var(--text-dim); font-style: italic;">"${esc(c.notes)}"</div>` : ''}
           </div>
         `).join("")}
       </div>
@@ -2936,6 +3021,20 @@ function renderDaily() {
       selectedHyd = btn.dataset.hyd;
     });
   });
+
+  // Save button always names the day it will write to, so an accidental
+  // past-date edit is impossible to miss (e.g. "Update · Jun 8 (not today)").
+  function refreshCiButton() {
+    const btn = document.getElementById("ciSave");
+    const dateVal = document.getElementById("ciDate").value;
+    if (!btn || !dateVal) return;
+    const exists = state.dailyCheckins.some(c => c.date === dateVal);
+    const isToday = dateVal === todayIsoDate();
+    btn.textContent = (exists ? "Update · " : "Save · ") + (isToday ? "Today" : fmtDate(dateVal) + " (not today)");
+  }
+  refreshCiButton();
+  document.getElementById("ciDate").addEventListener("input", refreshCiButton);
+  document.getElementById("ciDate").addEventListener("change", refreshCiButton);
 
   // Save button
   document.getElementById("ciSave").addEventListener("click", () => {
@@ -2989,6 +3088,8 @@ function renderDaily() {
             b.classList.add("active", c.hydration);
           }
         });
+        refreshCiButton();
+        toast("Editing " + fmtDate(c.date) + " — change the date to log a new day");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     });
@@ -3148,7 +3249,7 @@ function renderRun() {
                 ${r.time ? " · " + r.time : ""}
                 ${pace ? " · " + pace + "/mi" : ""}
               </div>
-              ${r.notes ? `<div class="small" style="margin-top: 4px; color: var(--text-dim);">${r.notes}</div>` : ""}
+              ${r.notes ? `<div class="small" style="margin-top: 4px; color: var(--text-dim);">${esc(r.notes)}</div>` : ""}
             </div>
           `;
         }).join("")}
@@ -3278,7 +3379,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v9
+      Lift Log · v12
     </div>
   `;
 
@@ -3313,7 +3414,7 @@ function exportCSV() {
     w.exercises.forEach(ex => {
       ex.sets.filter(s => s.logged).forEach(s => {
         rows.push([
-          w.date.slice(0, 10),
+          localIsoDate(w.date),
           w.dayName,
           ex.name,
           s.idx,
@@ -3328,7 +3429,7 @@ function exportCSV() {
       // Drop set row if logged
       if (ex.dropSet && ex.dropSet.logged) {
         rows.push([
-          w.date.slice(0, 10),
+          localIsoDate(w.date),
           w.dayName,
           ex.name,
           "drop",
@@ -3344,7 +3445,7 @@ function exportCSV() {
     // Add-on lifts row if present
     if (w.addons && w.addons.trim()) {
       rows.push([
-        w.date.slice(0, 10),
+        localIsoDate(w.date),
         w.dayName,
         "[ADD-ONS]",
         "",
@@ -3398,6 +3499,8 @@ function importJSON(e) {
 // NAVIGATION
 // ============================================================================
 function switchView(view) {
+  activeView = view;
+  lastRenderDay = todayIsoDate();
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-" + view).classList.add("active");
   document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.view === view));
@@ -3424,6 +3527,13 @@ window.completeWorkout = completeWorkout;
 window.startWorkout = startWorkout;
 window.renderToday = renderToday;
 window.renderHistory = renderHistory;
+
+lastRenderDay = todayIsoDate();
+// Ask the browser to protect localStorage from eviction (iOS can purge
+// storage for sites unused ~7 days; this request makes that much less likely).
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
+}
 
 renderToday();
 
