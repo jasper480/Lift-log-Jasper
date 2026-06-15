@@ -1170,9 +1170,9 @@ const PLAN = {
       { name: "DB Bench Press", sets: 3, repsLow: 5, repsHigh: 8, restSec: 210, isCompound: true, rirHint: "Top set to failure", notes: "Use the 125s when you hit 8 reps clean." },
       { name: "Seated DB Shoulder Press", sets: 3, repsLow: 6, repsHigh: 10, restSec: 150, isCompound: true, rirHint: "RIR 1, 1, 0", notes: "" },
       { name: "Incline DB Press", sets: 2, repsLow: 8, repsHigh: 10, restSec: 120, isCompound: true, rirHint: "RIR 1", notes: "" },
-      { name: "DB Lateral Raise", sets: 4, repsLow: 10, repsHigh: 15, restSec: 75, isCompound: false, rirHint: "Last set: myo-reps or drop", notes: "Side-delt priority — bumped to 4 sets." },
+      { name: "DB Lateral Raise", sets: 4, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Last set: myo-reps or drop", notes: "Side-delt priority — bumped to 4 sets." },
       { name: "Cable Tricep Pushdown", sets: 3, repsLow: 8, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Straight bar." },
-      { name: "Overhead Cable Tricep Ext (rope)", sets: 2, repsLow: 10, repsHigh: 12, restSec: 60, isCompound: false, rirHint: "Burnout", notes: "Full stretch at the bottom." }
+      { name: "Overhead Cable Tricep Ext (rope)", sets: 2, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "Burnout", notes: "Full stretch at the bottom." }
     ]
   },
   pullA: {
@@ -1182,9 +1182,9 @@ const PLAN = {
       { name: "Weighted Pull-Up / Lat Pulldown", sets: 3, repsLow: 5, repsHigh: 8, restSec: 210, isCompound: true, rirHint: "Top set to failure", notes: "Pull-up if BW reps ≥ 6; else lat pulldown wide pronated." },
       { name: "Bent Barbell Row", sets: 3, repsLow: 6, repsHigh: 10, restSec: 150, isCompound: true, rirHint: "RIR 1", notes: "Torso ~30° from horizontal." },
       { name: "Single-Arm Cable Row (shotgun)", sets: 2, repsLow: 8, repsHigh: 12, restSec: 90, isCompound: true, rirHint: "RIR 1", notes: "" },
-      { name: "Rear Delt Cable Fly", sets: 3, repsLow: 12, repsHigh: 15, restSec: 75, isCompound: false, rirHint: "Light, slow", notes: "Crossed cables." },
+      { name: "Rear Delt Cable Fly", sets: 3, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Light, slow", notes: "Crossed cables." },
       { name: "Barbell or DB Curl", sets: 3, repsLow: 6, repsHigh: 10, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "" },
-      { name: "Hammer Curl", sets: 2, repsLow: 10, repsHigh: 12, restSec: 60, isCompound: false, rirHint: "Brachialis emphasis", notes: "DB or rope. No swing." }
+      { name: "Hammer Curl", sets: 2, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "Brachialis emphasis", notes: "DB or rope. No swing." }
     ]
   },
   legs: {
@@ -1193,9 +1193,9 @@ const PLAN = {
     exercises: [
       { name: "Back Squat / Hex Bar DL", sets: 3, repsLow: 4, repsHigh: 6, restSec: 270, isCompound: true, rirHint: "RIR 0-1 top set", notes: "Alternate weekly. Brace via exhale-through-pursed-lips. Belt allowed on top set." },
       { name: "Romanian Deadlift", sets: 3, repsLow: 8, repsHigh: 10, restSec: 120, isCompound: true, rirHint: "Hamstring stretch focus", notes: "DB or BB. Same platform — keep the bar." },
-      { name: "Standing Calf Raise", sets: 2, repsLow: 8, repsHigh: 12, restSec: 75, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Gastrocnemius — knee straight. Still on the platform: finish here before moving stations." },
+      { name: "Standing Calf Raise", sets: 2, repsLow: 8, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Gastrocnemius — knee straight. Still on the platform: finish here before moving stations." },
       { name: "Leg Press", sets: 3, repsLow: 8, repsHigh: 12, restSec: 150, isCompound: true, rirHint: "Last set drop", notes: "Full ROM. Drop 25% rep out again." },
-      { name: "Seated Calf Raise", sets: 2, repsLow: 10, repsHigh: 15, restSec: 60, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Soleus — bent knee. Same area as leg press. Key for running economy & plantar fascia." },
+      { name: "Seated Calf Raise", sets: 2, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Soleus — bent knee. Same area as leg press. Key for running economy & plantar fascia." },
       { name: "Seated Leg Curl", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "RIR 1", notes: "Hamstring volume bumped to 3 sets for quad:ham balance." },
       { name: "Leg Extension", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Pause 1s at top." }
     ],
@@ -1206,11 +1206,11 @@ const PLAN = {
     subtitle: "Hypertrophy",
     exercises: [
       { name: "Incline DB Press", sets: 3, repsLow: 8, repsHigh: 12, restSec: 150, isCompound: true, rirHint: "Top set to failure", notes: "Chest priority lift today — big stretch at the bottom. Safe to fail (drop the DBs)." },
-      { name: "DB Lateral Raise", sets: 4, repsLow: 12, repsHigh: 15, restSec: 60, isCompound: false, rirHint: "RIR 0 last set", notes: "Side delts — placed here so the chest rests before the flat press. Laterals don't tax the triceps, so your press stays strong. Grab lighter DBs right where you are." },
+      { name: "DB Lateral Raise", sets: 4, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Side delts — placed here so the chest rests before the flat press. Laterals don't tax the triceps, so your press stays strong. Grab lighter DBs right where you are." },
       { name: "Smith Bench Press (flat)", sets: 3, repsLow: 6, repsHigh: 8, restSec: 180, isCompound: true, rirHint: "Top set to failure", notes: "Flat-press strength, lower reps. Smith catches make failure safe — grab a spotter when you can." },
-      { name: "Cable Chest Fly", sets: 3, repsLow: 10, repsHigh: 15, restSec: 75, isCompound: false, rirHint: "1s squeeze at peak", notes: "Mid- or low-to-high." },
-      { name: "Cable Y-Raise / Reverse Pec Deck", sets: 2, repsLow: 12, repsHigh: 15, restSec: 60, isCompound: false, rirHint: "", notes: "Rear/side delt for balance." },
-      { name: "Overhead DB Tricep Extension", sets: 3, repsLow: 10, repsHigh: 12, restSec: 75, isCompound: false, rirHint: "", notes: "Full stretch > load." },
+      { name: "Cable Chest Fly", sets: 3, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "1s squeeze at peak", notes: "Mid- or low-to-high." },
+      { name: "Cable Y-Raise / Reverse Pec Deck", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "", notes: "Rear/side delt for balance." },
+      { name: "Overhead DB Tricep Extension", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "", notes: "Full stretch > load." },
       { name: "Dips (optional finisher)", sets: 2, repsLow: 0, repsHigh: 0, restSec: 0, isCompound: false, rirHint: "AMRAP", notes: "Optional — skip if cooked before VO2 run.", optional: true }
     ]
   },
@@ -1220,10 +1220,10 @@ const PLAN = {
     exercises: [
       { name: "Lat Pulldown (neutral, narrow)", sets: 3, repsLow: 8, repsHigh: 12, restSec: 150, isCompound: true, rirHint: "RIR 0 last set", notes: "Lat priority. Lean back ~15°." },
       { name: "Seated Cable Row (close grip)", sets: 3, repsLow: 8, repsHigh: 12, restSec: 120, isCompound: true, rirHint: "1s squeeze", notes: "" },
-      { name: "Straight-Arm Lat Pulldown", sets: 3, repsLow: 10, repsHigh: 15, restSec: 75, isCompound: false, rirHint: "Lat isolation", notes: "Full stretch at top." },
-      { name: "Face Pull", sets: 2, repsLow: 12, repsHigh: 15, restSec: 60, isCompound: false, rirHint: "Shoulder health", notes: "Rope, high. External rotation." },
-      { name: "Preacher Curl", sets: 3, repsLow: 8, repsHigh: 12, restSec: 75, isCompound: false, rirHint: "Slow eccentric", notes: "Machine or DB." },
-      { name: "Cable Curl", sets: 2, repsLow: 10, repsHigh: 15, restSec: 60, isCompound: false, rirHint: "Burnout", notes: "High or low." },
+      { name: "Straight-Arm Lat Pulldown", sets: 3, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Lat isolation", notes: "Full stretch at top." },
+      { name: "Face Pull", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Shoulder health", notes: "Rope, high. External rotation." },
+      { name: "Cable Curl", sets: 2, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Burnout", notes: "High or low. Stay at the cable station first." },
+      { name: "Preacher Curl", sets: 3, repsLow: 8, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "Slow eccentric", notes: "Machine or DB. Finish here." },
       { name: "Romanian Deadlift", sets: 2, repsLow: 8, repsHigh: 12, restSec: 120, isCompound: true, rirHint: "RIR 1-2 (controlled)", notes: "Posterior-chain insurance, replaces the back hyper. Hamstring stretch focus. Hinge and brace with exhale through pursed lips (hernia-safe). Light-to-moderate — don't chase failure here." }
     ],
     hasCore: true
@@ -1496,7 +1496,8 @@ const STRENGTH_STD = {
   deadlift: { label: "Deadlift",       male: [173, 246, 336, 440, 552], female: [84, 132, 193, 265, 345] },
   shoulder: { label: "Shoulder Press", male: [66, 99, 142, 192, 248],   female: [28, 48, 75, 107, 143] },
   row:      { label: "Bent-Over Row",  male: [89, 133, 188, 253, 323],  female: [34, 58, 91, 130, 175] },
-  curl:     { label: "Barbell Curl",   male: [38, 66, 103, 149, 201],   female: [14, 31, 54, 85, 120] }
+  curl:     { label: "Barbell Curl",   male: [38, 66, 103, 149, 201],   female: [14, 31, 54, 85, 120] },
+  latpull:  { label: "Lat Pulldown",   male: [85, 127, 180, 243, 312],  female: [43, 68, 101, 137, 176] }
 };
 
 // Map app exercises to a standard. `factor` scales the logged load to a
@@ -1508,7 +1509,8 @@ const STD_MAP = {
   "Back Squat":               { std: "squat",    factor: 1 },
   "Hex Bar Deadlift":         { std: "deadlift", factor: 1 },
   "Bent Barbell Row":         { std: "row",      factor: 1 },
-  "Barbell or DB Curl":       { std: "curl",     factor: 1 }
+  "Barbell or DB Curl":       { std: "curl",     factor: 1 },
+  "Lat Pulldown (neutral, narrow)": { std: "latpull", factor: 1 }
 };
 
 function formatTopPct(tp) {
@@ -2221,8 +2223,8 @@ function wireAddonsListener() {
 function restTier(restSec) {
   if (!restSec) return null;
   if (restSec >= 150) return "green";   // heavy + upper-moderate compounds (longest rest)
-  if (restSec >= 90) return "yellow";   // secondary compounds / heavier isolation (mid)
-  return "red";                         // isolation / burnout (shortest rest)
+  if (restSec >= 120) return "yellow";  // secondary compounds (mid)
+  return "red";                         // isolation (now floored at 90s — shortest rest)
 }
 
 function renderExerciseCard(ex, idx, isCurrent) {
@@ -3379,7 +3381,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v12
+      Lift Log · v13
     </div>
   `;
 
