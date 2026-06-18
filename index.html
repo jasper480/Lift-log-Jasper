@@ -1055,11 +1055,107 @@
   @media (min-width: 380px) {
     .nav-label { font-size: 10px; letter-spacing: 0.08em; }
   }
+  /* ---- History ranking cards (2×3 grid, color-tiered by percentile) ---- */
+  .rank-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .rank-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    min-height: 104px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .rank-card .rank-name {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: 0.92;
+  }
+  .rank-card .rank-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin: 8px 0 6px;
+  }
+  .rank-card .rank-value span { font-size: 12px; font-weight: 600; opacity: 0.8; }
+  .rank-card .rank-pct { font-size: 13px; font-weight: 700; }
+  .rank-card .rank-pct span {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    opacity: 0.85;
+    margin-top: 1px;
+  }
+  .rank-card.gray { background: var(--surface); color: var(--text-muted); }
+  .rank-card.gray .rank-value { color: var(--text-dim); }
+  .rank-card.green  { background: linear-gradient(135deg, #059669, #34d399); color: #052e1f; border-color: transparent; box-shadow: 0 6px 20px rgba(16,185,129,0.35); }
+  .rank-card.blue   { background: linear-gradient(135deg, #2563eb, #60a5fa); color: #fff; border-color: transparent; box-shadow: 0 6px 20px rgba(59,130,246,0.38); }
+  .rank-card.red    { background: linear-gradient(135deg, #dc2626, #fb7185); color: #fff; border-color: transparent; box-shadow: 0 6px 20px rgba(239,68,68,0.38); }
+  .rank-card.purple { background: linear-gradient(135deg, #7c3aed, #c084fc); color: #fff; border-color: transparent; box-shadow: 0 6px 22px rgba(168,85,247,0.45); }
+  .rank-card.gold   { background: linear-gradient(135deg, #d97706, #fcd34d); color: #1a1100; border-color: transparent; box-shadow: 0 6px 24px rgba(245,158,11,0.55); }
+  .rank-card.gold::after {
+    content: "★";
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 16px;
+    opacity: 0.55;
+  }
+
+  /* ---- All-time total volume banner ---- */
+  .vol-banner {
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .vol-banner .vol-label {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+  .vol-banner .vol-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(30px, 9vw, 42px);
+    font-weight: 700;
+    line-height: 1.05;
+    margin: 6px 0 4px;
+    letter-spacing: -0.02em;
+  }
+  .vol-banner .vol-number span { font-size: 15px; font-weight: 600; opacity: 0.8; }
+  .vol-banner .vol-sub { font-size: 12px; font-weight: 600; letter-spacing: 0.03em; opacity: 0.9; }
+  .vol-banner.gray { background: var(--surface); color: var(--text-dim); }
+  .vol-banner.green  { background: linear-gradient(135deg, #059669, #34d399); color: #052e1f; border-color: transparent; box-shadow: 0 8px 26px rgba(16,185,129,0.4); }
+  .vol-banner.blue   { background: linear-gradient(135deg, #2563eb, #60a5fa); color: #fff; border-color: transparent; box-shadow: 0 8px 26px rgba(59,130,246,0.42); }
+  .vol-banner.red    { background: linear-gradient(135deg, #dc2626, #fb7185); color: #fff; border-color: transparent; box-shadow: 0 8px 26px rgba(239,68,68,0.42); }
+  .vol-banner.purple { background: linear-gradient(135deg, #7c3aed, #c084fc); color: #fff; border-color: transparent; box-shadow: 0 8px 28px rgba(168,85,247,0.5); }
+  .vol-banner.gold   { background: linear-gradient(135deg, #d97706, #fcd34d); color: #1a1100; border-color: transparent; box-shadow: 0 8px 30px rgba(245,158,11,0.6); }
+  .vol-banner.gold::after {
+    content: "★";
+    position: absolute;
+    top: 14px; right: 18px;
+    font-size: 22px;
+    opacity: 0.5;
+  }
 </style>
 </head>
 <body>
 
-<!-- ============ TODAY VIEW ============ -->
+<!-- ============ LIFT VIEW ============ -->
 <div class="app">
   <div id="view-today" class="view active">
     <div class="header">
@@ -1077,15 +1173,6 @@
       <div class="date mono" id="historyCount"></div>
     </div>
     <div id="historyContent"></div>
-  </div>
-
-  <!-- ============ BODYWEIGHT VIEW ============ -->
-  <div id="view-body" class="view">
-    <div class="header">
-      <h1>Bodyweight</h1>
-      <div class="date mono" id="bwTrend"></div>
-    </div>
-    <div id="bodyContent"></div>
   </div>
 
   <!-- ============ DAILY CHECK-IN VIEW ============ -->
@@ -1134,29 +1221,26 @@
 <nav class="nav">
   <button class="nav-item active" data-view="today">
     <svg class="nav-icon" viewBox="0 0 24 24"><path d="M6.5 6.5h2v11h-2zm9 0h2v11h-2zM4 9.5h2.5v5H4zm13.5 0H20v5h-2.5zm-9 1.5h7v2h-7z"/></svg>
-    <span class="nav-label">Today</span>
+    <span class="nav-label">Lift</span>
   </button>
-  <button class="nav-item" data-view="history">
-    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 8v4l3 2M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/></svg>
-    <span class="nav-label">History</span>
-  </button>
-  <button class="nav-item" data-view="body">
-    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.5 8.5l13 7M5.5 15.5l13-7"/></svg>
-    <span class="nav-label">Body</span>
+  <button class="nav-item" data-view="run">
+    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M5 21l3-7 4 2 3-3 4 6M9 12l-2-2 3-4"/></svg>
+    <span class="nav-label">Run</span>
   </button>
   <button class="nav-item" data-view="daily">
     <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
     <span class="nav-label">Daily</span>
   </button>
-  <button class="nav-item" data-view="run">
-    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M5 21l3-7 4 2 3-3 4 6M9 12l-2-2 3-4"/></svg>
-    <span class="nav-label">Run</span>
+  <button class="nav-item" data-view="history">
+    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 8v4l3 2M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/></svg>
+    <span class="nav-label">History</span>
   </button>
   <button class="nav-item" data-view="data">
     <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 8a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zM7 12h10M7 8h10M7 16h6"/></svg>
     <span class="nav-label">Data</span>
   </button>
 </nav>
+
 
 <script>
 // ============================================================================
@@ -1191,13 +1275,13 @@ const PLAN = {
     name: "Legs",
     subtitle: "",
     exercises: [
-      { name: "Back Squat / Hex Bar DL", sets: 3, repsLow: 4, repsHigh: 6, restSec: 270, isCompound: true, rirHint: "RIR 0-1 top set", notes: "Alternate weekly. Brace via exhale-through-pursed-lips. Belt allowed on top set." },
-      { name: "Romanian Deadlift", sets: 3, repsLow: 8, repsHigh: 10, restSec: 120, isCompound: true, rirHint: "Hamstring stretch focus", notes: "DB or BB. Same platform — keep the bar." },
-      { name: "Standing Calf Raise", sets: 2, repsLow: 8, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Gastrocnemius — knee straight. Still on the platform: finish here before moving stations." },
-      { name: "Leg Press", sets: 3, repsLow: 8, repsHigh: 12, restSec: 150, isCompound: true, rirHint: "Last set drop", notes: "Full ROM. Drop 25% rep out again." },
-      { name: "Seated Calf Raise", sets: 2, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Soleus — bent knee. Same area as leg press. Key for running economy & plantar fascia." },
-      { name: "Seated Leg Curl", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "RIR 1", notes: "Hamstring volume bumped to 3 sets for quad:ham balance." },
-      { name: "Leg Extension", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Pause 1s at top." }
+      { name: "Back Squat", sets: 3, repsLow: 4, repsHigh: 6, restSec: 240, isCompound: true, rirHint: "RIR 0-1 top set", notes: "Primary squat strength. Brace via exhale-through-pursed-lips. Belt on top set." },
+      { name: "Hex Bar Deadlift", sets: 2, repsLow: 4, repsHigh: 6, restSec: 240, isCompound: true, rirHint: "RIR 0-1 top set", notes: "Same platform after squats. Hex bar = less spinal load, pairs well with squatting." },
+      { name: "Standing Calf Raise", sets: 2, repsLow: 8, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Gastrocnemius — knee straight." },
+      { name: "Romanian Deadlift", sets: 2, repsLow: 8, repsHigh: 10, restSec: 120, isCompound: true, rirHint: "Hamstring stretch focus", notes: "DB or BB. Slow stretch on the eccentric." },
+      { name: "Leg Extension", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Quad isolation — covers the dropped leg press. Pause 1s at top." },
+      { name: "Seated Leg Curl", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "RIR 1", notes: "Hamstring isolation." },
+      { name: "Seated Calf Raise", sets: 2, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Slow eccentric (3s)", notes: "Soleus — bent knee. Key for running economy & plantar fascia." }
     ],
     hasCore: true
   },
@@ -1399,7 +1483,7 @@ function defaultState() {
     current: null,        // in-progress workout
     bodyweight: [],       // [{date, weight}]
     runs: [],             // [{date, type, distance, time, notes}]
-    legAlternator: "squat", // toggles after each legs day
+    legAlternator: "squat", // deprecated — squat & hex DL now both run every leg day
     dailyCheckins: []     // [{date, hrv, steps, bodyBattery, sleepScore, hydration, notes}]
   };
 }
@@ -1501,11 +1585,14 @@ const STRENGTH_STD = {
 };
 
 // Map app exercises to a standard. `factor` scales the logged load to a
-// barbell-equivalent before estimating 1RM (dumbbells are logged per hand → ×2).
+// barbell-equivalent before estimating 1RM. Jasper logs the TOTAL weight moved
+// (both dumbbells summed on two-arm lifts, e.g. 230 = two 115s; single-arm
+// lifts logged per arm), so the entered number is already the comparison load
+// and factor stays 1 everywhere. `factor` kept in case a per-hand lift is added.
 const STD_MAP = {
-  "DB Bench Press":           { std: "bench",    factor: 2 },
+  "DB Bench Press":           { std: "bench",    factor: 1 },
   "Smith Bench Press (flat)": { std: "bench",    factor: 1 },
-  "Seated DB Shoulder Press": { std: "shoulder", factor: 2 },
+  "Seated DB Shoulder Press": { std: "shoulder", factor: 1 },
   "Back Squat":               { std: "squat",    factor: 1 },
   "Hex Bar Deadlift":         { std: "deadlift", factor: 1 },
   "Bent Barbell Row":         { std: "row",      factor: 1 },
@@ -1581,8 +1668,156 @@ function workoutPercentiles(w) {
 }
 
 // ============================================================================
-// LAST SESSION LOOKUP & DOUBLE PROGRESSION
+// VO2 MAX PERCENTILE — vs all men & women (Cooper Institute, ages 20–29)
+// Percentile → VO2 (ml/kg/min). Blended 50/50 male/female. Static, June 2026.
 // ============================================================================
+const VO2_NORMS = {
+  male:   [[5, 29.0], [10, 32.1], [25, 40.1], [50, 48.0], [75, 55.2], [90, 61.8], [95, 66.3]],
+  female: [[5, 21.7], [10, 23.9], [25, 30.5], [50, 37.6], [75, 44.7], [90, 51.3], [95, 56.0]]
+};
+
+function vo2StrongerThan(vo2, anchors) {
+  const n = anchors.length;
+  // extend below 5th and above 95th for extrapolation
+  const pts = [[1, anchors[0][1] * 0.7], ...anchors,
+    [99, anchors[n - 1][1] + (anchors[n - 1][1] - anchors[n - 2][1]) * 1.5],
+    [99.9, anchors[n - 1][1] + (anchors[n - 1][1] - anchors[n - 2][1]) * 3.2]];
+  if (vo2 <= pts[0][1]) return Math.max(0.3, pts[0][0] * (vo2 / pts[0][1]));
+  if (vo2 >= pts[pts.length - 1][1]) return 99.9;
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (vo2 >= pts[i][1] && vo2 <= pts[i + 1][1]) {
+      const f = (vo2 - pts[i][1]) / (pts[i + 1][1] - pts[i][1]);
+      return pts[i][0] + f * (pts[i + 1][0] - pts[i][0]);
+    }
+  }
+  return 50;
+}
+
+function vo2Percentile(vo2) {
+  if (!vo2) return null;
+  const st = 0.5 * vo2StrongerThan(vo2, VO2_NORMS.male) + 0.5 * vo2StrongerThan(vo2, VO2_NORMS.female);
+  const topPct = Math.min(99, Math.max(0.1, 100 - st));
+  return { topPct, label: formatTopPct(topPct) };
+}
+
+// Best all-time estimated 1RM across any of the given exercise names.
+function bestE1ForNames(names) {
+  let best = 0;
+  state.workouts.forEach(w => {
+    w.exercises.forEach(ex => {
+      if (!names.includes(ex.name)) return;
+      ex.sets.filter(s => s.logged).forEach(s => {
+        const e = est1RM(s.weight, s.reps);
+        if (e > best) best = e;
+      });
+    });
+  });
+  return best;
+}
+
+// Most recent logged VO2 max (from daily check-ins).
+function currentVo2() {
+  const v = state.dailyCheckins.filter(c => c.vo2 != null).sort((a, b) => a.date.localeCompare(b.date));
+  return v.length ? v[v.length - 1].vo2 : null;
+}
+
+// Color tier by "top %". Lower = better. Vibrant gradients defined in CSS.
+function rankTierClass(topPct) {
+  if (topPct == null) return "gray";
+  if (topPct <= 2)  return "gold";
+  if (topPct <= 10) return "purple";
+  if (topPct <= 20) return "red";
+  if (topPct <= 30) return "blue";
+  if (topPct <= 40) return "green";
+  return "gray";
+}
+
+// Build the 6 history ranking cards.
+function rankCardsData() {
+  const lift = (label, names, std) => {
+    const e1 = bestE1ForNames(names);
+    const pc = e1 ? strengthPercentile(e1, std) : null;
+    return { name: label, value: e1 ? String(e1) : null, unit: "lb",
+             topPct: pc ? pc.topPct : null, pctLabel: pc ? pc.label : null, pop: "gym-goers" };
+  };
+  const v = currentVo2();
+  const vpc = v ? vo2Percentile(v) : null;
+  return [
+    lift("Bench", ["DB Bench Press", "Smith Bench Press (flat)"], "bench"),
+    lift("Squat", ["Back Squat"], "squat"),
+    lift("Deadlift", ["Hex Bar Deadlift"], "deadlift"),
+    lift("Lat Pull", ["Lat Pulldown (neutral, narrow)"], "latpull"),
+    lift("Shoulder Press", ["Seated DB Shoulder Press"], "shoulder"),
+    { name: "VO₂ Max", value: v ? String(v) : null, unit: "ml/kg",
+      topPct: vpc ? vpc.topPct : null, pctLabel: vpc ? vpc.label : null, pop: "all men & women" }
+  ];
+}
+
+function renderRankGrid() {
+  const cards = rankCardsData();
+  return `
+    <div class="rank-grid">
+      ${cards.map(c => {
+        const cls = rankTierClass(c.topPct);
+        const hasData = c.value != null;
+        return `
+        <div class="rank-card ${cls}">
+          <div class="rank-name">${c.name}</div>
+          <div class="rank-value">${hasData ? c.value : '—'}${hasData ? `<span> ${c.unit}</span>` : ''}</div>
+          <div class="rank-pct">${hasData && c.pctLabel ? `${c.pctLabel} <span>${c.pop}</span>` : 'No data yet'}</div>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
+}
+// ============================================================================
+// ALL-TIME TOTAL VOLUME BANNER
+// Sum of weight × reps for every logged set (including logged drop sets).
+// Color tier by milestone. Static thresholds — easy to edit.
+// ============================================================================
+function totalVolumeAllTime() {
+  let total = 0;
+  state.workouts.forEach(w => {
+    w.exercises.forEach(ex => {
+      ex.sets.filter(s => s.logged).forEach(s => { total += (s.weight || 0) * (s.reps || 0); });
+      const d = ex.dropSet;
+      if (d && d.logged && d.weight && d.reps) total += d.weight * d.reps;
+    });
+  });
+  return total;
+}
+
+function volumeTierClass(v) {
+  if (v >= 5000000) return "gold";
+  if (v >= 1000000) return "purple";
+  if (v >= 500000)  return "blue";
+  if (v >= 100000)  return "red";
+  if (v >= 50000)   return "green";
+  return "gray";
+}
+
+function nextVolumeMilestone(v) {
+  const ms = [[50000, "Green"], [100000, "Red"], [500000, "Blue"], [1000000, "Purple"], [5000000, "Gold"]];
+  for (const [t, name] of ms) if (v < t) return { remaining: t - v, name };
+  return null;
+}
+
+function renderVolumeBanner() {
+  const v = totalVolumeAllTime();
+  const cls = volumeTierClass(v);
+  const next = nextVolumeMilestone(v);
+  const sub = next
+    ? `${next.remaining.toLocaleString()} lb to ${next.name}`
+    : "Top tier reached — Gold ★";
+  return `
+    <div class="vol-banner ${cls}">
+      <div class="vol-label">Total Weight Lifted · All Time</div>
+      <div class="vol-number">${v.toLocaleString()} <span>lb</span></div>
+      <div class="vol-sub">${sub}</div>
+    </div>
+  `;
+}
+
 function findLastForExercise(dayKey, exerciseName) {
   for (let i = state.workouts.length - 1; i >= 0; i--) {
     const w = state.workouts[i];
@@ -1648,20 +1883,11 @@ function startWorkout(dayKey) {
     notes: ""
   }));
 
-  // For legs, mark which lift is up this week
-  let legChoice = null;
-  if (dayKey === "legs") {
-    legChoice = state.legAlternator;
-    const ex = exercises[0];
-    ex.name = legChoice === "squat" ? "Back Squat" : "Hex Bar Deadlift";
-  }
-
   state.current = {
     dayKey,
     dayName: day.name,
     date: new Date().toISOString(),
     exercises,
-    legChoice,
     stretches: {},       // { stretchName: true } for checked items
     core: {},            // { coreName: true } for checked items (Wed/Fri only)
     addons: "",          // free text for ad-hoc extra lifts
@@ -1690,11 +1916,6 @@ function completeWorkout() {
   if (!state.current) return;
   state.current.completedAt = new Date().toISOString();
   state.workouts.push(state.current);
-
-  // Toggle leg alternator
-  if (state.current.dayKey === "legs" && state.current.legChoice) {
-    state.legAlternator = state.current.legChoice === "squat" ? "hexdl" : "squat";
-  }
 
   const w = state.current;
   state.current = null;
@@ -2001,11 +2222,6 @@ function renderDayPreview(dayKey) {
   const preview = document.getElementById("dayPreview");
   const totalSets = day.exercises.reduce((s, e) => s + e.sets, 0);
 
-  let nextLegLift = "";
-  if (dayKey === "legs") {
-    nextLegLift = state.legAlternator === "squat" ? "Back Squat" : "Hex Bar Deadlift";
-  }
-
   preview.innerHTML = `
     <div class="card">
       <div style="display:flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;">
@@ -2022,7 +2238,7 @@ function renderDayPreview(dayKey) {
           <div style="display:flex; justify-content: space-between; align-items: baseline;">
             <div>
               <div style="font-size: 14px; font-weight: 600;">
-                ${dayKey === "legs" && i === 0 ? nextLegLift : ex.name}
+                ${ex.name}
                 ${ex.optional ? '<span class="small">· optional</span>' : ''}
               </div>
               <div class="small mono" style="margin-top: 2px;">${ex.sets} × ${ex.repsLow === 0 ? "AMRAP" : ex.repsLow + "-" + ex.repsHigh}</div>
@@ -2292,7 +2508,7 @@ function renderExerciseCard(ex, idx, isCurrent) {
           <div class="set-wrap">
             <div class="set-row ${set.logged ? 'logged' : ''}" data-set="${idx}-${sIdx}">
               <div class="set-num">${set.idx}</div>
-              <input class="set-input" type="number" inputmode="decimal" placeholder="${prev ? prev.weight : (suggestion && sIdx === 0 ? suggestion.weight : '-')}" value="${set.weight ?? ''}" data-field="weight">
+              <input class="set-input" type="number" inputmode="decimal" placeholder="${prev ? prev.weight : (suggestion && sIdx === 0 ? suggestion.weight : '-')}" value="${set.weight ?? ''}" data-prefill="${prev ? prev.weight : (suggestion && sIdx === 0 ? suggestion.weight : '')}" data-field="weight">
               <input class="set-input" type="number" inputmode="numeric" placeholder="${def.repsLow === 0 ? 'AMRAP' : def.repsLow + '-' + def.repsHigh}" value="${set.reps ?? ''}" data-field="reps">
               <select class="rir-select" data-field="rir">
                 <option value="">RIR</option>
@@ -2353,7 +2569,13 @@ function wireExerciseListeners() {
       justCompletedExIdx = null;
       const [exIdx, sIdx] = btn.dataset.log.split("-").map(Number);
       const row = btn.closest(".set-row");
-      const weight = parseFloat(row.querySelector("[data-field='weight']").value);
+      const wInput = row.querySelector("[data-field='weight']");
+      let weight = parseFloat(wInput.value);
+      if (isNaN(weight)) {
+        // Left blank → use the grayed placeholder (last week's / suggested weight)
+        const pf = parseFloat(wInput.dataset.prefill);
+        if (!isNaN(pf)) weight = pf;
+      }
       const reps = parseInt(row.querySelector("[data-field='reps']").value);
       const rirVal = row.querySelector("[data-field='rir']").value;
       const rir = rirVal === "" ? null : parseInt(rirVal);
@@ -2364,6 +2586,7 @@ function wireExerciseListeners() {
       }
 
       logSet(exIdx, sIdx, weight, reps, rir);
+      wInput.value = weight;
       btn.classList.add("logged");
       btn.textContent = "✓";
       row.classList.add("logged");
@@ -2477,9 +2700,12 @@ function renderHistory() {
 
   if (count === 0) {
     cont.innerHTML = `
+      ${renderVolumeBanner()}
+      <div class="card-title" style="margin: 2px 0 10px;">How You Rank</div>
+      ${renderRankGrid()}
       <div class="empty">
         <div class="empty-icon">📊</div>
-        <div>No workouts yet. Finish one and it'll show up here.</div>
+        <div>No workouts yet. Finish one and your sessions show up here.</div>
       </div>
     `;
     return;
@@ -2496,6 +2722,10 @@ function renderHistory() {
   const recent = [...state.workouts].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
 
   cont.innerHTML = `
+    ${renderVolumeBanner()}
+    <div class="card-title" style="margin: 2px 0 10px;">How You Rank</div>
+    ${renderRankGrid()}
+
     <div class="card">
       <div class="card-title">Browse by Exercise</div>
       ${DAY_KEYS.map(k => {
@@ -2714,148 +2944,52 @@ function drawChart(sessions) {
 // VIEW: BODYWEIGHT (WEEKLY)
 // ============================================================================
 let bwChart = null;
-function renderBody() {
-  const cont = document.getElementById("bodyContent");
-  const list = [...state.bodyweight].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // Weekly trend
-  let trend = "";
-  if (list.length >= 2) {
-    const recent = list.slice(-4);
-    if (recent.length >= 2) {
-      const delta = recent[recent.length - 1].weight - recent[0].weight;
-      trend = (delta > 0 ? "+" : "") + delta.toFixed(1) + " LB " + recent.length + "W";
-    }
-  }
-  document.getElementById("bwTrend").textContent = trend;
+// Merged bodyweight series: legacy Body-tab entries (state.bodyweight) plus
+// weights logged on daily check-ins. Deduped by date; check-in weight wins.
+function getWeightSeries() {
+  const map = {};
+  (state.bodyweight || []).forEach(b => { if (b && b.weight != null) map[b.date] = b.weight; });
+  (state.dailyCheckins || []).forEach(c => { if (c && c.weight != null) map[c.date] = c.weight; });
+  return Object.keys(map).sort((a, b) => a.localeCompare(b)).map(date => ({ date, weight: map[date] }));
+}
 
-  const current = list.length ? list[list.length - 1].weight : null;
-  const max = list.length ? Math.max(...list.map(b => b.weight)) : null;
-  const min = list.length ? Math.min(...list.map(b => b.weight)) : null;
-
-  cont.innerHTML = `
-    <div class="card">
-      <div class="card-title">Log Weekly Weight</div>
-      <div class="bw-input-row">
-        <div>
-          <div class="form-label">Date</div>
-          <input type="date" class="bw-input" id="bwDate" value="${todayIsoDate()}">
-        </div>
-        <div>
-          <div class="form-label">Weight (lb)</div>
-          <input type="number" inputmode="decimal" step="0.1" class="bw-input" id="bwWeight" placeholder="190.0">
-        </div>
-        <div style="grid-column: 1 / -1; margin-top: 10px;">
-          <button class="btn" id="bwLog">Log Bodyweight</button>
-        </div>
-      </div>
-      <div class="small" style="margin-top: 10px;">Recommended: same time of day, post-pee, pre-food. Once per week.</div>
-    </div>
-
-    ${list.length ? `
-      <div class="stat-grid">
-        <div class="stat">
-          <div class="stat-label">Current</div>
-          <div class="stat-value">${current.toFixed(1)}</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Max</div>
-          <div class="stat-value">${max.toFixed(1)}</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Min</div>
-          <div class="stat-value">${min.toFixed(1)}</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Trend</div>
-        <div class="chart-wrap"><canvas id="bwChart"></canvas></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">History</div>
-        ${list.slice().reverse().map((entry, idx) => `
-          <div style="padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div class="mono" style="font-weight: 600;">${entry.weight.toFixed(1)} lb</div>
-              <div class="small">${fmtDateLong(entry.date)}</div>
-            </div>
-            <button class="btn-xs btn btn-ghost" style="width: auto;" data-del-bw="${list.length - 1 - idx}">Delete</button>
-          </div>
-        `).join("")}
-      </div>
-    ` : `
-      <div class="empty">
-        <div class="empty-icon">⚖</div>
-        <div>No weights logged yet. Log your first one above.</div>
-      </div>
-    `}
-  `;
-
-  document.getElementById("bwLog").addEventListener("click", () => {
-    const date = document.getElementById("bwDate").value;
-    const weight = parseFloat(document.getElementById("bwWeight").value);
-    if (!date || !weight || weight < 50 || weight > 500) {
-      toast("Enter a valid weight");
-      return;
-    }
-    // Replace existing entry for same date
-    state.bodyweight = state.bodyweight.filter(b => b.date !== date);
-    state.bodyweight.push({ date, weight });
-    saveState();
-    toast("Logged " + weight + " lb");
-    vibrate(40);
-    renderBody();
-  });
-
-  document.querySelectorAll("[data-del-bw]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (!confirm("Delete this entry?")) return;
-      const idx = parseInt(btn.dataset.delBw);
-      const sorted = [...state.bodyweight].sort((a, b) => new Date(a.date) - new Date(b.date));
-      const target = sorted[idx];
-      state.bodyweight = state.bodyweight.filter(b => !(b.date === target.date && b.weight === target.weight));
-      saveState();
-      renderBody();
-    });
-  });
-
-  if (list.length) {
-    if (bwChart) bwChart.destroy();
-    bwChart = new Chart(document.getElementById("bwChart"), {
-      type: "line",
-      data: {
-        labels: list.map(b => fmtDate(b.date)),
-        datasets: [{
-          data: list.map(b => b.weight),
-          borderColor: "#f59e0b",
-          backgroundColor: "#f59e0b20",
-          borderWidth: 2.5,
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: "#f59e0b",
-          pointBorderColor: "#0a0a0a",
-          pointBorderWidth: 2,
-          fill: true
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { backgroundColor: "#222" } },
-        scales: {
-          x: { grid: { color: "#1a1a1a" }, ticks: { color: "#666", font: { size: 10 } } },
-          y: { grid: { color: "#1a1a1a" }, ticks: { color: "#666", font: { size: 10 } } }
-        }
+function drawWeightChart(series) {
+  const canvas = document.getElementById("bwChart");
+  if (!canvas) return;
+  if (bwChart) bwChart.destroy();
+  bwChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: series.map(b => fmtDate(b.date)),
+      datasets: [{
+        data: series.map(b => b.weight),
+        borderColor: "#f59e0b",
+        backgroundColor: "#f59e0b20",
+        borderWidth: 2.5,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: "#f59e0b",
+        pointBorderColor: "#0a0a0a",
+        pointBorderWidth: 2,
+        fill: true
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: "#222" } },
+      scales: {
+        x: { grid: { color: "#1a1a1a" }, ticks: { color: "#666", font: { size: 10 } } },
+        y: { grid: { color: "#1a1a1a" }, ticks: { color: "#666", font: { size: 10 } } }
       }
-    });
-  }
+    }
+  });
 }
 
 // ============================================================================
 // VIEW: DAILY CHECK-IN (Garmin + reflection)
 // ============================================================================
-let dailyCharts = { hrv: null, bb: null, sleep: null };
+let dailyCharts = { hrv: null, bb: null, sleep: null, vo2: null };
 
 function getTodayCheckin() {
   const today = todayIsoDate();
@@ -2913,6 +3047,10 @@ function renderDaily() {
   document.getElementById("dailyDate").textContent = today ? "LOGGED" : "PENDING";
 
   const list = [...state.dailyCheckins].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const weightSeries = getWeightSeries();
+  const wCurrent = weightSeries.length ? weightSeries[weightSeries.length - 1].weight : null;
+  const wMax = weightSeries.length ? Math.max(...weightSeries.map(b => b.weight)) : null;
+  const wMin = weightSeries.length ? Math.min(...weightSeries.map(b => b.weight)) : null;
 
   cont.innerHTML = `
     <div class="readiness-badge" style="border-color: ${readiness.color};">
@@ -2951,6 +3089,16 @@ function renderDaily() {
           <input type="number" inputmode="numeric" class="bw-input" id="ciSteps" placeholder="12000" value="${today?.steps ?? ''}">
         </div>
       </div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">Bodyweight (lb)</div>
+          <input type="number" inputmode="decimal" step="0.1" class="bw-input" id="ciWeight" placeholder="190.0" value="${today?.weight ?? ''}">
+        </div>
+        <div>
+          <div class="form-label">VO₂ Max</div>
+          <input type="number" inputmode="decimal" step="0.1" class="bw-input" id="ciVo2" placeholder="optional" value="${today?.vo2 ?? ''}">
+        </div>
+      </div>
 
       <div style="margin-top: 14px;">
         <div class="form-label" style="margin-bottom: 8px;">Hydration (self-assessment)</div>
@@ -2969,6 +3117,30 @@ function renderDaily() {
       <button class="btn" id="ciSave" style="margin-top: 14px;">${today ? 'Update Check-In' : 'Save Check-In'}</button>
     </div>
 
+    ${weightSeries.length ? `
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Weight</div>
+          <div class="stat-value">${wCurrent.toFixed(1)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Max</div>
+          <div class="stat-value">${wMax.toFixed(1)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Min</div>
+          <div class="stat-value">${wMin.toFixed(1)}</div>
+        </div>
+      </div>
+    ` : ""}
+    ${weightSeries.length >= 2 ? `
+      <div class="card">
+        <div class="card-title">Bodyweight Trend</div>
+        <div class="chart-wrap"><canvas id="bwChart"></canvas></div>
+        <div class="small" style="margin-top: 8px;">Weigh in consistently — same time of day, post-bathroom, pre-food.</div>
+      </div>
+    ` : ""}
+
     ${list.length >= 2 ? `
       <div class="card">
         <div class="card-title">HRV Trend</div>
@@ -2981,6 +3153,13 @@ function renderDaily() {
       <div class="card">
         <div class="card-title">Body Battery Trend</div>
         <div class="chart-wrap"><canvas id="bbChart"></canvas></div>
+      </div>
+    ` : ""}
+
+    ${state.dailyCheckins.filter(c => c.vo2 != null).length >= 2 ? `
+      <div class="card">
+        <div class="card-title">VO₂ Max Trend</div>
+        <div class="chart-wrap"><canvas id="vo2Chart"></canvas></div>
       </div>
     ` : ""}
 
@@ -3048,6 +3227,8 @@ function renderDaily() {
       sleepScore: parseIntOrNull(document.getElementById("ciSleep").value),
       bodyBattery: parseIntOrNull(document.getElementById("ciBb").value),
       steps: parseIntOrNull(document.getElementById("ciSteps").value),
+      weight: parseFloatOrNull(document.getElementById("ciWeight").value),
+      vo2: parseFloatOrNull(document.getElementById("ciVo2").value),
       hydration: selectedHyd,
       notes: document.getElementById("ciNotes").value.trim() || null
     };
@@ -3082,6 +3263,8 @@ function renderDaily() {
         document.getElementById("ciSleep").value = c.sleepScore ?? '';
         document.getElementById("ciBb").value = c.bodyBattery ?? '';
         document.getElementById("ciSteps").value = c.steps ?? '';
+        document.getElementById("ciWeight").value = c.weight ?? '';
+        document.getElementById("ciVo2").value = c.vo2 ?? '';
         document.getElementById("ciNotes").value = c.notes ?? '';
         selectedHyd = c.hydration || null;
         document.querySelectorAll(".hydration-btn").forEach(b => {
@@ -3098,15 +3281,24 @@ function renderDaily() {
   });
 
   // Charts
+  if (weightSeries.length >= 2) drawWeightChart(weightSeries);
   if (list.length >= 2) {
     drawDailyChart("hrvChart", list, "hrv", "HRV (ms)", "#f59e0b", "hrv");
     drawDailyChart("sleepChart", list, "sleepScore", "Sleep Score", "#3b82f6", "sleep");
     drawDailyChart("bbChart", list, "bodyBattery", "Body Battery", "#10b981", "bb");
   }
+  if (list.filter(c => c.vo2 != null).length >= 2) {
+    drawDailyChart("vo2Chart", list, "vo2", "VO2 Max", "#06b6d4", "vo2");
+  }
 }
 
 function parseIntOrNull(v) {
   const n = parseInt(v);
+  return isNaN(n) ? null : n;
+}
+
+function parseFloatOrNull(v) {
+  const n = parseFloat(v);
   return isNaN(n) ? null : n;
 }
 
@@ -3370,18 +3562,12 @@ function renderData() {
     </div>
 
     <div class="card">
-      <div class="card-title">Plan Reference</div>
-      <div class="small" style="margin-bottom: 8px;">Leg alternator next session: <strong class="accent-text">${state.legAlternator === "squat" ? "Back Squat" : "Hex Bar Deadlift"}</strong></div>
-      <button class="btn btn-ghost btn-sm" id="toggleLeg">Toggle leg alternator</button>
-    </div>
-
-    <div class="card">
       <div class="card-title danger-text">Danger Zone</div>
       <button class="btn btn-danger" id="clearAll">Clear All Data</button>
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v13
+      Lift Log · v18
     </div>
   `;
 
@@ -3389,11 +3575,6 @@ function renderData() {
   document.getElementById("expJson").addEventListener("click", exportJSON);
   document.getElementById("impBtn").addEventListener("click", () => document.getElementById("impFile").click());
   document.getElementById("impFile").addEventListener("change", importJSON);
-  document.getElementById("toggleLeg").addEventListener("click", () => {
-    state.legAlternator = state.legAlternator === "squat" ? "hexdl" : "squat";
-    saveState();
-    renderData();
-  });
   document.getElementById("clearAll").addEventListener("click", () => {
     if (!confirm("Delete ALL data? This cannot be undone.")) return;
     if (!confirm("Really sure? This wipes every workout, run, and bodyweight log.")) return;
@@ -3509,7 +3690,6 @@ function switchView(view) {
 
   if (view === "today") renderToday();
   if (view === "history") { historyFocus = null; renderHistory(); }
-  if (view === "body") renderBody();
   if (view === "daily") renderDaily();
   if (view === "run") renderRun();
   if (view === "data") renderData();
