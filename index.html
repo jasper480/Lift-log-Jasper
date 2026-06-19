@@ -3657,12 +3657,28 @@ function renderData() {
     </div>
 
     <div class="card">
+      <div class="card-title">Alternate Plans</div>
+      <div class="small" style="margin-bottom: 12px;">Other lifting plans hosted alongside this one. Each page keeps its own separate data.</div>
+      <a class="btn" href="plan-w1.html" style="display:block; text-align:center; text-decoration:none; margin-bottom:8px;">Alternate Plan W1</a>
+      <button class="btn btn-ghost" id="planN1" data-href="plan-n1.html" style="margin-bottom:8px;">Alternate Plan N1 · soon</button>
+      <button class="btn btn-ghost" id="planB1" data-href="plan-b1.html">Alternate Plan B1 · soon</button>
+    </div>
+
+    <div class="card">
       <div class="card-title danger-text">Danger Zone</div>
       <button class="btn btn-danger" id="clearAll">Clear All Data</button>
+      <div id="clearConfirm" style="display: none; margin-top: 14px;">
+        <div class="small" style="margin-bottom: 8px;">Type <strong>DELETE</strong> (all caps) to confirm. This permanently erases every workout, run, check-in, and bodyweight log. It cannot be undone.</div>
+        <input type="text" class="bw-input" id="clearInput" placeholder="DELETE" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <div class="btn-row" style="margin-top: 10px;">
+          <button class="btn btn-ghost" id="clearCancel">Cancel</button>
+          <button class="btn btn-danger" id="clearConfirmBtn">Permanently Delete</button>
+        </div>
+      </div>
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v20
+      Lift Log · v21
     </div>
   `;
 
@@ -3670,9 +3686,34 @@ function renderData() {
   document.getElementById("expJson").addEventListener("click", exportJSON);
   document.getElementById("impBtn").addEventListener("click", () => document.getElementById("impFile").click());
   document.getElementById("impFile").addEventListener("change", importJSON);
-  document.getElementById("clearAll").addEventListener("click", () => {
-    if (!confirm("Delete ALL data? This cannot be undone.")) return;
-    if (!confirm("Really sure? This wipes every workout, run, and bodyweight log.")) return;
+
+  // Placeholder alternate-plan buttons (targets named, not yet live)
+  ["planN1", "planB1"].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener("click", () => toast("Coming soon — not set up yet"));
+  });
+
+  // Clear-all requires typing DELETE exactly
+  const clearBtn = document.getElementById("clearAll");
+  const clearBox = document.getElementById("clearConfirm");
+  const clearInput = document.getElementById("clearInput");
+  clearBtn.addEventListener("click", () => {
+    clearBtn.style.display = "none";
+    clearBox.style.display = "block";
+    clearInput.value = "";
+    clearInput.focus();
+  });
+  document.getElementById("clearCancel").addEventListener("click", () => {
+    clearBox.style.display = "none";
+    clearBtn.style.display = "block";
+    clearInput.value = "";
+  });
+  document.getElementById("clearConfirmBtn").addEventListener("click", () => {
+    if (clearInput.value !== "DELETE") {
+      toast("Type DELETE exactly to confirm");
+      clearInput.focus();
+      return;
+    }
     state = defaultState();
     saveState();
     renderData();
