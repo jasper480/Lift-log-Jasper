@@ -1292,8 +1292,8 @@ const PLAN = {
       { name: "Incline DB Press", sets: 3, repsLow: 8, repsHigh: 12, restSec: 150, isCompound: true, rirHint: "Top set to failure", notes: "Chest priority lift today — big stretch at the bottom. Safe to fail (drop the DBs)." },
       { name: "DB Lateral Raise", sets: 4, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "Side delts — placed here so the chest rests before the flat press. Laterals don't tax the triceps, so your press stays strong. Grab lighter DBs right where you are." },
       { name: "Smith Bench Press (flat)", sets: 3, repsLow: 6, repsHigh: 8, restSec: 180, isCompound: true, rirHint: "Top set to failure", notes: "Flat-press strength, lower reps. Smith catches make failure safe — grab a spotter when you can." },
+      { name: "Cable Y-Raise / Reverse Pec Deck", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "", notes: "Rear/side delt — breaks up the two chest lifts." },
       { name: "Cable Chest Fly", sets: 3, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "1s squeeze at peak", notes: "Mid- or low-to-high." },
-      { name: "Cable Y-Raise / Reverse Pec Deck", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "", notes: "Rear/side delt for balance." },
       { name: "Overhead DB Tricep Extension", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "", notes: "Full stretch > load." },
       { name: "Dips (optional finisher)", sets: 2, repsLow: 0, repsHigh: 0, restSec: 0, isCompound: false, rirHint: "AMRAP", notes: "Optional — skip if cooked before VO2 run.", optional: true }
     ]
@@ -1597,7 +1597,8 @@ const STD_MAP = {
   "Hex Bar Deadlift":         { std: "deadlift", factor: 1 },
   "Bent Barbell Row":         { std: "row",      factor: 1 },
   "Barbell or DB Curl":       { std: "curl",     factor: 1 },
-  "Lat Pulldown (neutral, narrow)": { std: "latpull", factor: 1 }
+  "Lat Pulldown (neutral, narrow)": { std: "latpull", factor: 1 },
+  "Weighted Pull-Up / Lat Pulldown": { std: "latpull", factor: 1 }
 };
 
 function formatTopPct(tp) {
@@ -1746,7 +1747,7 @@ function rankCardsData() {
     lift("Bench", ["DB Bench Press", "Smith Bench Press (flat)"], "bench"),
     lift("Squat", ["Back Squat"], "squat"),
     lift("Deadlift", ["Hex Bar Deadlift"], "deadlift"),
-    lift("Lat Pull", ["Lat Pulldown (neutral, narrow)"], "latpull"),
+    lift("Lat Pull", ["Lat Pulldown (neutral, narrow)", "Weighted Pull-Up / Lat Pulldown"], "latpull"),
     lift("Shoulder Press", ["Seated DB Shoulder Press"], "shoulder"),
     { name: "VO₂ Max", value: v ? String(v) : null, unit: "ml/kg",
       topPct: vpc ? vpc.topPct : null, pctLabel: vpc ? vpc.label : null, pop: "all men & women" }
@@ -1814,6 +1815,98 @@ function renderVolumeBanner() {
       <div class="vol-label">Total Weight Lifted · All Time</div>
       <div class="vol-number">${v.toLocaleString()} <span>lb</span></div>
       <div class="vol-sub">${sub}</div>
+    </div>
+  `;
+}
+
+// ============================================================================
+// MUSCLE MAP — front/back figure, each region shaded by the corresponding
+// lift's percentile tier (same color scale as the ranking cards).
+// ============================================================================
+function bodyTierColor(topPct) {
+  if (topPct == null) return "#55555f";   // tracked-but-no-data / low → muted
+  if (topPct <= 2)  return "#fbbf24";      // gold
+  if (topPct <= 10) return "#c084fc";      // purple
+  if (topPct <= 20) return "#f87171";      // red
+  if (topPct <= 30) return "#60a5fa";      // blue
+  if (topPct <= 40) return "#34d399";      // green
+  return "#55555f";                        // gray tier
+}
+
+function renderBodyMap() {
+  const by = {};
+  rankCardsData().forEach(c => { by[c.name] = c.topPct; });
+  const BASE = "#33333b";                  // inert body (head, arms, abs, shins)
+  const chest = bodyTierColor(by["Bench"]);
+  const shoulder = bodyTierColor(by["Shoulder Press"]);
+  const quads = bodyTierColor(by["Squat"]);
+  const posterior = bodyTierColor(by["Deadlift"]);   // glutes + hamstrings
+  const back = bodyTierColor(by["Lat Pull"]);
+  const feet = bodyTierColor(by["VO₂ Max"]);
+
+  const svg = `
+  <svg viewBox="0 0 300 250" width="100%" style="max-width:340px;display:block;margin:4px auto 0;" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#0f0f14" stroke-width="1" stroke-linejoin="round">
+      <!-- ===== FRONT (cx 78) ===== -->
+      <!-- base body -->
+      <circle cx="78" cy="16" r="11" fill="${BASE}"/>
+      <rect x="73" y="24" width="10" height="7" rx="3" fill="${BASE}"/>
+      <rect x="38" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
+      <rect x="108" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
+      <rect x="35" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
+      <rect x="112" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
+      <rect x="64" y="62" width="28" height="44" rx="9" fill="${BASE}"/>
+      <rect x="63" y="160" width="13" height="52" rx="6" fill="${BASE}"/>
+      <rect x="80" y="160" width="13" height="52" rx="6" fill="${BASE}"/>
+      <!-- shoulders -->
+      <ellipse cx="52" cy="46" rx="12" ry="9" fill="${shoulder}"/>
+      <ellipse cx="104" cy="46" rx="12" ry="9" fill="${shoulder}"/>
+      <!-- chest -->
+      <ellipse cx="69" cy="53" rx="11" ry="11" fill="${chest}"/>
+      <ellipse cx="87" cy="53" rx="11" ry="11" fill="${chest}"/>
+      <!-- quads -->
+      <rect x="61" y="103" width="16" height="60" rx="7" fill="${quads}"/>
+      <rect x="79" y="103" width="16" height="60" rx="7" fill="${quads}"/>
+      <!-- feet -->
+      <ellipse cx="69" cy="216" rx="10" ry="6" fill="${feet}"/>
+      <ellipse cx="87" cy="216" rx="10" ry="6" fill="${feet}"/>
+
+      <!-- ===== BACK (cx 222) ===== -->
+      <!-- base body -->
+      <circle cx="222" cy="16" r="11" fill="${BASE}"/>
+      <rect x="217" y="24" width="10" height="7" rx="3" fill="${BASE}"/>
+      <rect x="182" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
+      <rect x="252" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
+      <rect x="179" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
+      <rect x="256" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
+      <rect x="207" y="160" width="13" height="52" rx="6" fill="${BASE}"/>
+      <rect x="224" y="160" width="13" height="52" rx="6" fill="${BASE}"/>
+      <!-- shoulders (rear delts) -->
+      <ellipse cx="196" cy="46" rx="12" ry="9" fill="${shoulder}"/>
+      <ellipse cx="248" cy="46" rx="12" ry="9" fill="${shoulder}"/>
+      <!-- back / lats (V-taper) -->
+      <path d="M206 42 L238 42 Q245 64 236 94 Q230 106 222 106 Q214 106 208 94 Q199 64 206 42 Z" fill="${back}"/>
+      <!-- glutes -->
+      <ellipse cx="214" cy="112" rx="10" ry="9" fill="${posterior}"/>
+      <ellipse cx="230" cy="112" rx="10" ry="9" fill="${posterior}"/>
+      <!-- hamstrings -->
+      <rect x="205" y="118" width="15" height="48" rx="7" fill="${posterior}"/>
+      <rect x="224" y="118" width="15" height="48" rx="7" fill="${posterior}"/>
+      <!-- feet -->
+      <ellipse cx="214" cy="216" rx="10" ry="6" fill="${feet}"/>
+      <ellipse cx="230" cy="216" rx="10" ry="6" fill="${feet}"/>
+    </g>
+    <text x="78" y="238" text-anchor="middle" fill="#666" font-size="10" font-family="JetBrains Mono, monospace" letter-spacing="2">FRONT</text>
+    <text x="222" y="238" text-anchor="middle" fill="#666" font-size="10" font-family="JetBrains Mono, monospace" letter-spacing="2">BACK</text>
+  </svg>`;
+
+  return `
+    <div class="card">
+      <div class="card-title">Muscle Map</div>
+      ${svg}
+      <div class="small" style="margin-top: 6px; text-align: center; color: var(--text-dim);">
+        Each muscle is shaded by your ranking in the lift that trains it.
+      </div>
     </div>
   `;
 }
@@ -2703,6 +2796,7 @@ function renderHistory() {
       ${renderVolumeBanner()}
       <div class="card-title" style="margin: 2px 0 10px;">How You Rank</div>
       ${renderRankGrid()}
+      ${renderBodyMap()}
       <div class="empty">
         <div class="empty-icon">📊</div>
         <div>No workouts yet. Finish one and your sessions show up here.</div>
@@ -2725,6 +2819,7 @@ function renderHistory() {
     ${renderVolumeBanner()}
     <div class="card-title" style="margin: 2px 0 10px;">How You Rank</div>
     ${renderRankGrid()}
+    ${renderBodyMap()}
 
     <div class="card">
       <div class="card-title">Browse by Exercise</div>
@@ -3567,7 +3662,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v18
+      Lift Log · v20
     </div>
   `;
 
