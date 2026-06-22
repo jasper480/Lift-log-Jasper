@@ -1306,7 +1306,7 @@ const PLAN = {
       { name: "Seated Cable Row (close grip)", sets: 3, repsLow: 8, repsHigh: 12, restSec: 120, isCompound: true, rirHint: "1s squeeze", notes: "" },
       { name: "Straight-Arm Lat Pulldown", sets: 3, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Lat isolation", notes: "Full stretch at top." },
       { name: "Face Pull", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Shoulder health", notes: "Rope, high. External rotation." },
-      { name: "Cable Curl", sets: 2, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Burnout", notes: "High or low. Stay at the cable station first." },
+      { name: "Bayesian Curl", sets: 2, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "Burnout", notes: "Cable from behind you, lean away — deep stretch at the bottom." },
       { name: "Preacher Curl", sets: 3, repsLow: 8, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "Slow eccentric", notes: "Machine or DB. Finish here." },
       { name: "Romanian Deadlift", sets: 2, repsLow: 8, repsHigh: 12, restSec: 120, isCompound: true, rirHint: "RIR 1-2 (controlled)", notes: "Posterior-chain insurance, replaces the back hyper. Hamstring stretch focus. Hinge and brace with exhale through pursed lips (hernia-safe). Light-to-moderate — don't chase failure here." }
     ],
@@ -1399,7 +1399,7 @@ const EX_PATTERN = {
   "Straight-Arm Lat Pulldown": "straight_arm_pulldown",
   "Face Pull": "face_pull",
   "Preacher Curl": "preacher_curl",
-  "Cable Curl": "cable_curl",
+  "Bayesian Curl": "cable_curl",
   "Lower Back Hyper": "back_hyper"
 };
 
@@ -1426,9 +1426,19 @@ const STRETCHES = [
 const CORE = [
   "Hanging Leg Raise (3 × 8–12) — anti-extension; hold a DB between the feet to load",
   "Weighted Suitcase Carry (2 × 30–40 yd/side) — anti-lateral flexion; one heavy DB, brace and walk tall",
-  "Plank (2 × 45–60s) — anti-extension; set a plate on your back to progress",
-  "Weighted Russian Twist (2 × 12/side) — rotation; hold a DB or plate, controlled tempo"
+  "Weighted Russian Twist (2 × 12/side) — rotation; hold a DB or plate, controlled tempo",
+  "Plank (1 × max time) — anti-extension; hold to failure, add a plate on your back to progress"
 ];
+// Friday (Pull B) swaps the Russian Twist for the Dragon Flag.
+const CORE_FRIDAY = [
+  "Hanging Leg Raise (3 × 8–12) — anti-extension; hold a DB between the feet to load",
+  "Weighted Suitcase Carry (2 × 30–40 yd/side) — anti-lateral flexion; one heavy DB, brace and walk tall",
+  "Dragon Flag (3 × 5–8) — full-body anti-extension; Bruce Lee classic, lower slow and fully controlled",
+  "Plank (1 × max time) — anti-extension; hold to failure, add a plate on your back to progress"
+];
+function coreForDay(dayKey) {
+  return dayKey === "pullB" ? CORE_FRIDAY : CORE;
+}
 
 // ============================================================================
 // RUNNING PLAN (by weekday) & VO2 ROTATION
@@ -2391,7 +2401,7 @@ function renderActiveWorkout(cont) {
         <div class="card-title">Core Work <span style="color: var(--text-dim); letter-spacing: 0; text-transform: none; font-weight: 500;">· ~10 min</span></div>
         <div class="small" style="margin-bottom: 10px;">Tap to check off. Loaded & bodyweight — anti-extension, carries, rotation.</div>
         <div class="stretches-list">
-          ${CORE.map((c, i) => `
+          ${coreForDay(w.dayKey).map((c, i) => `
             <label class="stretch-item ${w.core && w.core[c] ? 'checked' : ''}" data-core="${i}">
               <input type="checkbox" ${w.core && w.core[c] ? 'checked' : ''}>
               <span class="stretch-check"></span>
@@ -2503,7 +2513,7 @@ function wireCoreListeners() {
     label.addEventListener("click", (e) => {
       e.preventDefault();
       const idx = parseInt(label.dataset.core);
-      const name = CORE[idx];
+      const name = coreForDay(state.current.dayKey)[idx];
       if (!state.current.core) state.current.core = {};
       if (state.current.core[name]) {
         delete state.current.core[name];
@@ -3678,7 +3688,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v21
+      Lift Log · v22
     </div>
   `;
 
