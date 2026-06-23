@@ -229,6 +229,8 @@
     padding: 1px 0 7px 44px;
     letter-spacing: 0.01em;
   }
+  .set-last.set-tight { padding-bottom: 1px; }
+  .set-last.set-best { color: #fbbf24; }
   /* Drop set (optional) */
   .drop-set {
     margin-top: 12px;
@@ -1931,6 +1933,26 @@ function findLastForExercise(dayKey, exerciseName) {
   return null;
 }
 
+// All-time best working set for an exercise (highest estimated 1RM), across every
+// day it appears, including the in-progress workout so a new PR shows immediately.
+function bestSetForExercise(name) {
+  let best = null, bestE1 = 0;
+  const scan = (w) => {
+    if (!w || !w.exercises) return;
+    w.exercises.forEach(exr => {
+      if (exr.name !== name) return;
+      exr.sets.filter(s => s.logged).forEach(s => {
+        if (s.weight == null || s.reps == null) return;
+        const e1 = est1RM(s.weight, s.reps);
+        if (e1 > bestE1) { bestE1 = e1; best = s; }
+      });
+    });
+  };
+  state.workouts.forEach(scan);
+  scan(state.current);
+  return best;
+}
+
 function suggestNext(dayKey, exDef) {
   const last = findLastForExercise(dayKey, exDef.name);
   if (!last) return null;
@@ -2566,6 +2588,12 @@ function renderExerciseCard(ex, idx, isCurrent) {
   const drop = ex.dropSet || { logged: false };
   const dropDone = drop.logged || drop.skipped;
 
+  // All-time best set for this movement (shown in gold beneath each "Last" line)
+  const best = bestSetForExercise(ex.name);
+  const bestTxt = best
+    ? `${best.weight} lb × ${best.reps}${best.rir != null ? ' @ RIR ' + best.rir : ''}`
+    : "N/A";
+
   return `
     <div class="exercise ${isCurrent ? 'current' : ''} ${isDone ? 'done' : ''} ${isOpen ? 'open' : ''} ${tier ? 'tier-' + tier : ''}" data-idx="${idx}">
       <div class="ex-header" data-toggle="${idx}">
@@ -2623,7 +2651,8 @@ function renderExerciseCard(ex, idx, isCurrent) {
               </select>
               <button class="log-btn ${set.logged ? 'logged' : ''}" data-log="${idx}-${sIdx}">${set.logged ? '✓' : '+'}</button>
             </div>
-            <div class="set-last">Last: ${lastTxt}</div>
+            <div class="set-last set-tight">Last: ${lastTxt}</div>
+            <div class="set-last set-best">Best: ${bestTxt}</div>
           </div>
           `;
         }).join("")}
@@ -3688,7 +3717,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · v23
+      Lift Log · V-1.22
     </div>
   `;
 
