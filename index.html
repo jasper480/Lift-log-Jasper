@@ -1933,19 +1933,19 @@ function findLastForExercise(dayKey, exerciseName) {
   return null;
 }
 
-// All-time best working set for an exercise (highest estimated 1RM), across every
-// day it appears, including the in-progress workout so a new PR shows immediately.
-function bestSetForExercise(name) {
+// Best logged set at a specific set position (index) for an exercise, by estimated
+// 1RM, across every day it appears plus the in-progress workout. So set 1's "Best"
+// reflects best-ever first sets, set 2's reflects best-ever second sets, etc.
+function bestSetAtPosition(name, pos) {
   let best = null, bestE1 = 0;
   const scan = (w) => {
     if (!w || !w.exercises) return;
     w.exercises.forEach(exr => {
       if (exr.name !== name) return;
-      exr.sets.filter(s => s.logged).forEach(s => {
-        if (s.weight == null || s.reps == null) return;
-        const e1 = est1RM(s.weight, s.reps);
-        if (e1 > bestE1) { bestE1 = e1; best = s; }
-      });
+      const s = exr.sets[pos];
+      if (!s || !s.logged || s.weight == null || s.reps == null) return;
+      const e1 = est1RM(s.weight, s.reps);
+      if (e1 > bestE1) { bestE1 = e1; best = s; }
     });
   };
   state.workouts.forEach(scan);
@@ -2588,12 +2588,6 @@ function renderExerciseCard(ex, idx, isCurrent) {
   const drop = ex.dropSet || { logged: false };
   const dropDone = drop.logged || drop.skipped;
 
-  // All-time best set for this movement (shown in gold beneath each "Last" line)
-  const best = bestSetForExercise(ex.name);
-  const bestTxt = best
-    ? `${best.weight} lb × ${best.reps}${best.rir != null ? ' @ RIR ' + best.rir : ''}`
-    : "N/A";
-
   return `
     <div class="exercise ${isCurrent ? 'current' : ''} ${isDone ? 'done' : ''} ${isOpen ? 'open' : ''} ${tier ? 'tier-' + tier : ''}" data-idx="${idx}">
       <div class="ex-header" data-toggle="${idx}">
@@ -2634,6 +2628,10 @@ function renderExerciseCard(ex, idx, isCurrent) {
           const prev = lastSets[sIdx];
           const lastTxt = prev
             ? `${prev.weight} lb × ${prev.reps}${prev.rir != null ? ' @ RIR ' + prev.rir : ''}`
+            : "N/A";
+          const bestAt = bestSetAtPosition(ex.name, sIdx);
+          const bestTxt = bestAt
+            ? `${bestAt.weight} lb × ${bestAt.reps}${bestAt.rir != null ? ' @ RIR ' + bestAt.rir : ''}`
             : "N/A";
           return `
           <div class="set-wrap">
@@ -3717,7 +3715,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · V-1.22
+      Lift Log · V-1.23
     </div>
   `;
 
