@@ -930,6 +930,83 @@
     font-size: 13px;
     font-weight: 600;
   }
+  .run-alt-select {
+    width: 100%;
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid rgba(245,158,11,0.4);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: inherit;
+    margin-bottom: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%208'%3E%3Cpath%20fill='%23f59e0b'%20d='M1%201l5%205%205-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+  }
+  .run-rec-hint {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+  /* Plyos & drills collapsible box */
+  .plyo-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .plyo-box > summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 16px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .plyo-box > summary::-webkit-details-marker { display: none; }
+  .plyo-chev { color: var(--text-muted); transition: transform 0.2s; }
+  .plyo-box[open] .plyo-chev { transform: rotate(180deg); }
+  .plyo-list { padding: 4px 8px 8px; }
+  .plyo-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 8px;
+    border-top: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .plyo-item:active { background: var(--bg-elev); }
+  .plyo-yt { font-size: 11px; color: var(--accent); font-weight: 600; }
+  /* Collapsed-by-default history sections */
+  .hist-collapse > summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 2px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .hist-collapse > summary::-webkit-details-marker { display: none; }
+  .hist-chev { transition: transform 0.2s; }
+  .hist-collapse[open] > summary { border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .hist-collapse[open] .hist-chev { transform: rotate(180deg); }
   .run-rec-vo2 {
     margin-top: 14px;
     padding: 12px;
@@ -1445,22 +1522,83 @@ function coreForDay(dayKey) {
 // ============================================================================
 // RUNNING PLAN (by weekday) & VO2 ROTATION
 // ============================================================================
+// Each weekday maps to an effort category + a default log-type.
 const RUN_PLAN = {
-  1: { type: "easy", title: "Easy / Z2 — 4–5 mi", details: "Conversational pace. 7:45–8:15/mi. After lift, with 2-hr gap.", pace: "7:45–8:15/mi" },
-  2: { type: "easy", title: "Easy / Z2 — 4–5 mi", details: "Conversational pace. 7:45–8:15/mi.", pace: "7:45–8:15/mi" },
-  3: { type: "recovery", title: "Rest or 3 mi shake-out", details: "Optional very easy mileage. Skip if legs feel heavy from squats/DLs.", pace: "8:00+/mi" },
-  4: { type: "vo2", title: "VO2 Intervals", details: "1.5–2 mi warm-up + workout + 1.5 mi cool-down. See rotation below.", pace: "5:20–5:45/mi for intervals" },
-  5: { type: "easy", title: "Easy / Z2 — 4–5 mi", details: "Conversational pace. 7:45–8:15/mi.", pace: "7:45–8:15/mi" },
-  6: { type: "long", title: "Long Run — 8–10 mi", details: "Easy 7:30–8:00/mi. Every 4 weeks: progression OR fartlek variation.", pace: "7:30–8:00/mi" },
-  0: { type: "recovery", title: "Optional walk only", details: "Full rest day. Walk if you feel like it.", pace: "—" }
+  1: { cat: "easy",      type: "easy" },
+  2: { cat: "easy",      type: "easy" },
+  3: { cat: "recovery",  type: "recovery" },
+  4: { cat: "intervals", type: "vo2" },
+  5: { cat: "easy",      type: "easy" },
+  6: { cat: "long",      type: "long" },
+  0: { cat: "recovery",  type: "recovery" }
 };
 
-const VO2_ROTATION = [
-  { name: "Week 1: 5 × 1000 m", details: "90s jog rest · ~3:25 per rep (5:30/mi)" },
-  { name: "Week 2: 6 × 800 m", details: "90s jog rest · ~2:40 per rep (5:20/mi)" },
-  { name: "Week 3: 4 × 1200 m", details: "2 min jog rest · ~4:11 per rep (5:35/mi)" },
-  { name: "Week 4: 5 × (4 min hard / 2 min easy)", details: "Hard 5K effort, ~5:30/mi" }
+// Similar-effort workout options per category. First entry is the canonical
+// recommendation; the rest are interchangeable swaps for the same day.
+const RUN_ALTS = {
+  intervals: [
+    { title: "5 × 1000 m repeats", details: "90s jog rest · ~3:25/rep. 1.5–2 mi warm-up + 1.5 mi cool-down.", pace: "5:20–5:45/mi" },
+    { title: "6 × 800 m repeats", details: "90s jog rest · ~2:40/rep. Classic VO2 stimulus.", pace: "~5:20/mi" },
+    { title: "4 × 1200 m repeats", details: "2:30 jog rest · ~4:11/rep. Longer reps, same system.", pace: "~5:35/mi" },
+    { title: "5K tempo", details: "Continuous 20–25 min, comfortably hard. No rest.", pace: "5:55–6:15/mi" },
+    { title: "Fartlek 8 × (1 min hard / 1 min easy)", details: "Unstructured surges by feel after a warm-up.", pace: "surge ~5:15/mi" },
+    { title: "12 × 400 m", details: "60–75s jog rest · ~88s/rep. Leg speed and turnover.", pace: "5:05–5:15/mi" }
+  ],
+  easy: [
+    { title: "Easy / Z2 — 4–5 mi", details: "Conversational pace, nose-breathing the whole way.", pace: "7:45–8:15/mi" },
+    { title: "Easy + 6 strides", details: "Z2 run, then 6 × 20s relaxed strides at the end.", pace: "7:45–8:15/mi" },
+    { title: "Recovery 3–4 mi", details: "Very easy and flat. Just shake the legs out.", pace: "8:15+/mi" },
+    { title: "Easy trail / hills", details: "Soft surface, relaxed effort on rolling terrain.", pace: "by feel" },
+    { title: "Easy 5–6 mi", details: "Slightly longer aerobic base run, still easy.", pace: "7:45–8:15/mi" }
+  ],
+  long: [
+    { title: "Long Run — 8–10 mi", details: "Steady easy effort. Fuel if you go over 75 min.", pace: "7:30–8:00/mi" },
+    { title: "Long w/ tempo finish", details: "Easy throughout, then close the last 2 mi at tempo.", pace: "finish ~6:15/mi" },
+    { title: "Long progression", details: "Start easy, drop ~10s/mi every 2 miles.", pace: "8:00 → 6:30/mi" },
+    { title: "Long fartlek", details: "Easy base with a 1 min surge every mile.", pace: "7:30/mi + surges" },
+    { title: "Long trail / time on feet", details: "Soft surface — effort over pace.", pace: "by feel" }
+  ],
+  recovery: [
+    { title: "Rest or 3 mi shake-out", details: "Optional very easy mileage. Skip if legs are cooked.", pace: "8:15+/mi" },
+    { title: "Cross-train 30–45 min", details: "Bike, swim, or elliptical at easy effort.", pace: "Z1–Z2" },
+    { title: "Recovery jog 2–3 mi", details: "Flat, very easy, fully conversational.", pace: "8:30+/mi" },
+    { title: "Walk + mobility", details: "30 min walk plus hip and ankle mobility.", pace: "—" },
+    { title: "Full rest", details: "Legs up. Prioritize sleep and food.", pace: "—" }
+  ]
+};
+
+// Plyometric / drill menu — each links to a YouTube how-to.
+const PLYOS = [
+  { name: "A-Skip", q: "A-skip running drill technique" },
+  { name: "B-Skip", q: "B-skip running drill technique" },
+  { name: "Bounds", q: "bounding drill for runners" },
+  { name: "Box Jumps (height)", q: "box jump for height technique" },
+  { name: "Accelerators (build-ups)", q: "acceleration build-up strides drill" },
+  { name: "High Knees", q: "high knees running drill" },
+  { name: "Pogo Hops", q: "pogo hops plyometric drill" },
+  { name: "Single-Leg Bounds", q: "single leg bound plyometric drill" },
+  { name: "Broad Jump", q: "standing broad jump technique" },
+  { name: "Depth Jumps", q: "depth jump plyometric technique" }
 ];
+
+// Default option index for a category (intervals auto-rotates by session count).
+function defaultAltIdx(cat) {
+  if (cat === "intervals") {
+    const vo2Count = state.runs.filter(r => r.type === "vo2").length;
+    return vo2Count % RUN_ALTS.intervals.length;
+  }
+  return 0;
+}
+
+// Wrap a list of item-HTML strings in a collapsed-by-default disclosure.
+// Use {n} in the label for the item count.
+function collapsibleHistory(itemsHtml, label) {
+  if (!itemsHtml.length) return "";
+  return `<details class="hist-collapse">
+    <summary><span>${label.replace("{n}", itemsHtml.length)}</span><span class="hist-chev">▾</span></summary>
+    <div class="hist-inner">${itemsHtml.join("")}</div>
+  </details>`;
+}
 
 // ============================================================================
 // STORAGE
@@ -2850,7 +2988,7 @@ function renderHistory() {
   });
 
   // Recent workouts list + per-day-type drilldown
-  const recent = [...state.workouts].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+  const recent = [...state.workouts].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 25);
 
   cont.innerHTML = `
     ${renderVolumeBanner()}
@@ -2877,7 +3015,7 @@ function renderHistory() {
 
     <div class="card">
       <div class="card-title">Recent Workouts</div>
-      ${recent.map(w => {
+      ${collapsibleHistory(recent.map(w => {
         const sets = w.exercises.reduce((s, e) => s + e.sets.filter(x => x.logged).length, 0);
         const vol = w.exercises.reduce((s, e) => s + e.sets.filter(x => x.logged).reduce((s2, x) => s2 + (x.weight * x.reps), 0), 0);
         return `
@@ -2889,7 +3027,7 @@ function renderHistory() {
             <div class="small mono" style="margin-top: 4px;">${sets} sets · ${vol.toLocaleString()} lb total</div>
           </div>
         `;
-      }).join("")}
+      }), "View all {n} workouts")}
     </div>
   `;
 
@@ -3121,7 +3259,7 @@ function drawWeightChart(series) {
 // ============================================================================
 // VIEW: DAILY CHECK-IN (Garmin + reflection)
 // ============================================================================
-let dailyCharts = { hrv: null, bb: null, sleep: null, vo2: null };
+let dailyCharts = { hrv: null, bb: null, sleep: null, vo2: null, runvol: null };
 
 function getTodayCheckin() {
   const today = todayIsoDate();
@@ -3295,10 +3433,17 @@ function renderDaily() {
       </div>
     ` : ""}
 
+    ${state.runs.length >= 2 ? `
+      <div class="card">
+        <div class="card-title">Running Volume <span style="color: var(--text-dim); letter-spacing: 0; text-transform: none; font-weight: 500;">· weekly miles</span></div>
+        <div class="chart-wrap"><canvas id="runVolChart"></canvas></div>
+      </div>
+    ` : ""}
+
     ${list.length ? `
       <div class="card">
         <div class="card-title">Past Check-Ins</div>
-        ${list.slice().reverse().slice(0, 30).map(c => `
+        ${collapsibleHistory(list.slice().reverse().slice(0, 60).map(c => `
           <div class="past-checkin" data-edit-date="${c.date}">
             <div style="display: flex; justify-content: space-between; align-items: baseline;">
               <div class="mono" style="font-weight: 600;">${fmtDateLong(c.date)}</div>
@@ -3313,7 +3458,7 @@ function renderDaily() {
             </div>
             ${c.notes ? `<div class="small" style="margin-top: 6px; color: var(--text-dim); font-style: italic;">"${esc(c.notes)}"</div>` : ''}
           </div>
-        `).join("")}
+        `), "View all {n} dates")}
       </div>
     ` : `
       <div class="empty">
@@ -3422,6 +3567,7 @@ function renderDaily() {
   if (list.filter(c => c.vo2 != null).length >= 2) {
     drawDailyChart("vo2Chart", list, "vo2", "VO2 Max", "#06b6d4", "vo2");
   }
+  if (state.runs.length >= 2) drawRunVolumeChart();
 }
 
 function parseIntOrNull(v) {
@@ -3432,6 +3578,64 @@ function parseIntOrNull(v) {
 function parseFloatOrNull(v) {
   const n = parseFloat(v);
   return isNaN(n) ? null : n;
+}
+
+function drawRunVolumeChart() {
+  const canvas = document.getElementById("runVolChart");
+  if (!canvas) return;
+  if (dailyCharts.runvol) dailyCharts.runvol.destroy();
+
+  const mondayOf = (date) => {
+    const dt = new Date(date);
+    dt.setHours(0, 0, 0, 0);
+    const day = (dt.getDay() + 6) % 7; // Monday = 0
+    dt.setDate(dt.getDate() - day);
+    return dt;
+  };
+
+  const weeks = [];
+  const thisMon = mondayOf(new Date());
+  for (let i = 9; i >= 0; i--) {
+    const m = new Date(thisMon);
+    m.setDate(m.getDate() - i * 7);
+    weeks.push({ start: m, miles: 0 });
+  }
+  state.runs.forEach(r => {
+    if (!r.distance) return;
+    const m = mondayOf(new Date(r.date)).getTime();
+    const wk = weeks.find(w => w.start.getTime() === m);
+    if (wk) wk.miles += r.distance;
+  });
+
+  const labels = weeks.map(w => `${w.start.getMonth() + 1}/${w.start.getDate()}`);
+  const data = weeks.map(w => +w.miles.toFixed(1));
+  const color = "#22d3ee";
+
+  dailyCharts.runvol = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Miles",
+        data,
+        backgroundColor: color + "cc",
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: "#222", callbacks: { title: (it) => "Week of " + it[0].label, label: (it) => it.parsed.y + " mi" } }
+      },
+      scales: {
+        x: { grid: { color: "#1a1a1a" }, ticks: { color: "#666", font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: "#1a1a1a" }, ticks: { color: "#666", font: { size: 10 } } }
+      }
+    }
+  });
 }
 
 function drawDailyChart(canvasId, list, field, label, color, instKey) {
@@ -3494,25 +3698,30 @@ function renderRun() {
   const dow = new Date().getDay();
   const todayPlan = RUN_PLAN[dow];
   const dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][dow];
-
-  // Count VO2 sessions for rotation (modulo 4)
-  const vo2Count = state.runs.filter(r => r.type === "vo2").length;
-  const vo2Next = VO2_ROTATION[vo2Count % 4];
+  const alts = RUN_ALTS[todayPlan.cat];
+  const defIdx = defaultAltIdx(todayPlan.cat);
 
   cont.innerHTML = `
     <div class="card run-rec-card">
       <div class="card-title">${dayName} · Recommended</div>
-      <div class="run-rec-title">${todayPlan.title}</div>
-      <div class="run-rec-details">${todayPlan.details}</div>
-      <div class="run-rec-pace mono">Target pace: ${todayPlan.pace}</div>
-      ${todayPlan.type === "vo2" ? `
-        <div class="run-rec-vo2">
-          <div class="vo2-week-label">Next VO2 workout</div>
-          <div class="vo2-week-name">${vo2Next.name}</div>
-          <div class="vo2-week-details mono">${vo2Next.details}</div>
-        </div>
-      ` : ""}
+      <select id="runAltSelect" class="run-alt-select">
+        ${alts.map((a, i) => `<option value="${i}" ${i === defIdx ? 'selected' : ''}>${a.title}</option>`).join("")}
+      </select>
+      <div class="run-rec-details" id="runRecDetails">${alts[defIdx].details}</div>
+      <div class="run-rec-pace mono" id="runRecPace">Target pace: ${alts[defIdx].pace}</div>
+      <div class="run-rec-hint">Tap the menu to swap in a similar-effort workout.</div>
     </div>
+
+    <details class="plyo-box">
+      <summary><span class="plyo-title">Plyos &amp; Drills</span><span class="plyo-chev">▾</span></summary>
+      <div class="plyo-list">
+        ${PLYOS.map(p => `
+          <a class="plyo-item" href="https://www.youtube.com/results?search_query=${encodeURIComponent(p.q)}" target="_blank" rel="noopener">
+            <span>${p.name}</span><span class="plyo-yt">▷ video</span>
+          </a>
+        `).join("")}
+      </div>
+    </details>
 
     <div class="card">
       <div class="card-title">Log Run</div>
@@ -3558,7 +3767,7 @@ function renderRun() {
     ${state.runs.length ? `
       <div class="card">
         <div class="card-title">History</div>
-        ${[...state.runs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20).map(r => {
+        ${collapsibleHistory([...state.runs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 40).map(r => {
           const type = RUN_TYPES.find(t => t.id === r.type) || { name: r.type, color: "#999" };
           const pace = r.distance && r.timeSec ? secsToPace(r.timeSec / r.distance) : null;
           return `
@@ -3578,7 +3787,7 @@ function renderRun() {
               ${r.notes ? `<div class="small" style="margin-top: 4px; color: var(--text-dim);">${esc(r.notes)}</div>` : ""}
             </div>
           `;
-        }).join("")}
+        }), "View all {n} runs")}
       </div>
     ` : `
       <div class="empty"><div class="empty-icon">🏃</div><div>No runs logged.</div></div>
@@ -3594,6 +3803,16 @@ function renderRun() {
       selectedType = btn.dataset.rtype;
     });
   });
+
+  // Alternatives dropdown updates the displayed workout in place
+  const altSel = document.getElementById("runAltSelect");
+  if (altSel) {
+    altSel.addEventListener("change", () => {
+      const a = alts[parseInt(altSel.value)];
+      document.getElementById("runRecDetails").textContent = a.details;
+      document.getElementById("runRecPace").textContent = "Target pace: " + a.pace;
+    });
+  }
 
   // Auto-format the time field: type digits, the colon appears for you.
   // "4922" -> "49:22"; five+ digits -> H:MM:SS.
@@ -3715,7 +3934,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · V-1.23
+      Lift Log · V-1.24
     </div>
   `;
 
