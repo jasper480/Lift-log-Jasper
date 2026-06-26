@@ -1137,15 +1137,15 @@
   /* ---- History ranking cards (2×3 grid, color-tiered by percentile) ---- */
   .rank-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 7px;
     margin-bottom: 18px;
   }
   .rank-card {
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px;
-    min-height: 104px;
+    border-radius: 12px;
+    padding: 10px 9px;
+    min-height: 92px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1153,26 +1153,27 @@
     overflow: hidden;
   }
   .rank-card .rank-name {
-    font-size: 11px;
-    letter-spacing: 0.14em;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 700;
     opacity: 0.92;
+    line-height: 1.15;
   }
   .rank-card .rank-value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 28px;
+    font-size: 21px;
     font-weight: 700;
     line-height: 1;
-    margin: 8px 0 6px;
+    margin: 6px 0 5px;
   }
-  .rank-card .rank-value span { font-size: 12px; font-weight: 600; opacity: 0.8; }
-  .rank-card .rank-pct { font-size: 13px; font-weight: 700; }
+  .rank-card .rank-value span { font-size: 10px; font-weight: 600; opacity: 0.8; }
+  .rank-card .rank-pct { font-size: 11px; font-weight: 700; }
   .rank-card .rank-pct span {
     display: block;
-    font-size: 10px;
+    font-size: 8.5px;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
     opacity: 0.85;
     margin-top: 1px;
   }
@@ -1369,11 +1370,11 @@ const PLAN = {
     subtitle: "Hypertrophy",
     exercises: [
       { name: "Incline DB Press", sets: 3, repsLow: 8, repsHigh: 12, restSec: 150, isCompound: true, rirHint: "Top set to failure", notes: "Big stretch at the bottom. Safe to fail (drop the DBs)." },
+      { name: "Overhead DB Tricep Extension", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "", notes: "Full stretch > load." },
       { name: "DB Lateral Raise", sets: 4, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "RIR 0 last set", notes: "" },
       { name: "Smith Bench Press (flat)", sets: 3, repsLow: 6, repsHigh: 8, restSec: 180, isCompound: true, rirHint: "Top set to failure", notes: "Grab a spotter when you can." },
       { name: "Cable Y-Raise / Reverse Pec Deck", sets: 2, repsLow: 12, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "", notes: "Rear and side delts." },
       { name: "Cable Chest Fly", sets: 3, repsLow: 10, repsHigh: 15, restSec: 90, isCompound: false, rirHint: "1s squeeze at peak", notes: "Mid- or low-to-high." },
-      { name: "Overhead DB Tricep Extension", sets: 3, repsLow: 10, repsHigh: 12, restSec: 90, isCompound: false, rirHint: "", notes: "Full stretch > load." },
       { name: "Dips (optional finisher)", sets: 2, repsLow: 0, repsHigh: 0, restSec: 0, isCompound: false, rirHint: "AMRAP", notes: "", optional: true }
     ]
   },
@@ -1731,7 +1732,9 @@ const STRENGTH_STD = {
   shoulder: { label: "Shoulder Press", male: [66, 99, 142, 192, 248],   female: [28, 48, 75, 107, 143] },
   row:      { label: "Bent-Over Row",  male: [89, 133, 188, 253, 323],  female: [34, 58, 91, 130, 175] },
   curl:     { label: "Barbell Curl",   male: [38, 66, 103, 149, 201],   female: [14, 31, 54, 85, 120] },
-  latpull:  { label: "Lat Pulldown",   male: [85, 127, 180, 243, 312],  female: [43, 68, 101, 137, 176] }
+  latpull:  { label: "Lat Pulldown",   male: [85, 127, 180, 243, 312],  female: [43, 68, 101, 137, 176] },
+  triceps:  { label: "Tricep Extension", male: [11, 27, 52, 84, 122],   female: [7, 15, 28, 46, 68] },
+  calf:     { label: "Calf Raise",      male: [69, 160, 295, 471, 678], female: [33, 93, 182, 298, 440] }
 };
 
 // Map app exercises to a standard. `factor` scales the logged load to a
@@ -1748,7 +1751,9 @@ const STD_MAP = {
   "Bent Barbell Row":         { std: "row",      factor: 1 },
   "Barbell or DB Curl":       { std: "curl",     factor: 1 },
   "Lat Pulldown (neutral, narrow)": { std: "latpull", factor: 1 },
-  "Weighted Pull-Up / Lat Pulldown": { std: "latpull", factor: 1 }
+  "Weighted Pull-Up / Lat Pulldown": { std: "latpull", factor: 1 },
+  "Overhead DB Tricep Extension": { std: "triceps", factor: 1 },
+  "Standing Calf Raise":      { std: "calf",     factor: 1 }
 };
 
 function formatTopPct(tp) {
@@ -1899,6 +1904,9 @@ function rankCardsData() {
     lift("Deadlift", ["Hex Bar Deadlift"], "deadlift"),
     lift("Lat Pull", ["Lat Pulldown (neutral, narrow)", "Weighted Pull-Up / Lat Pulldown"], "latpull"),
     lift("Shoulder Press", ["Seated DB Shoulder Press"], "shoulder"),
+    lift("Triceps", ["Overhead DB Tricep Extension"], "triceps"),
+    lift("Biceps", ["Barbell or DB Curl"], "curl"),
+    lift("Calves", ["Standing Calf Raise"], "calf"),
     { name: "VO₂ Max", value: v ? String(v) : null, unit: "ml/kg",
       topPct: vpc ? vpc.topPct : null, pctLabel: vpc ? vpc.label : null, pop: "all men & women" }
   ];
@@ -1993,6 +2001,9 @@ function renderBodyMap() {
   const posterior = bodyTierColor(by["Deadlift"]);   // glutes + hamstrings
   const back = bodyTierColor(by["Lat Pull"]);
   const feet = bodyTierColor(by["VO₂ Max"]);
+  const biceps = bodyTierColor(by["Biceps"]);
+  const triceps = bodyTierColor(by["Triceps"]);
+  const calves = bodyTierColor(by["Calves"]);
 
   const svg = `
   <svg viewBox="0 0 300 250" width="100%" style="max-width:340px;display:block;margin:4px auto 0;" xmlns="http://www.w3.org/2000/svg">
@@ -2001,8 +2012,8 @@ function renderBodyMap() {
       <!-- base body -->
       <circle cx="78" cy="16" r="11" fill="${BASE}"/>
       <rect x="73" y="24" width="10" height="7" rx="3" fill="${BASE}"/>
-      <rect x="38" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
-      <rect x="108" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
+      <rect x="38" y="44" width="10" height="32" rx="5" fill="${biceps}"/>
+      <rect x="108" y="44" width="10" height="32" rx="5" fill="${biceps}"/>
       <rect x="35" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
       <rect x="112" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
       <rect x="64" y="62" width="28" height="44" rx="9" fill="${BASE}"/>
@@ -2025,12 +2036,12 @@ function renderBodyMap() {
       <!-- base body -->
       <circle cx="222" cy="16" r="11" fill="${BASE}"/>
       <rect x="217" y="24" width="10" height="7" rx="3" fill="${BASE}"/>
-      <rect x="182" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
-      <rect x="252" y="44" width="10" height="32" rx="5" fill="${BASE}"/>
+      <rect x="182" y="44" width="10" height="32" rx="5" fill="${triceps}"/>
+      <rect x="252" y="44" width="10" height="32" rx="5" fill="${triceps}"/>
       <rect x="179" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
       <rect x="256" y="74" width="9" height="30" rx="4" fill="${BASE}"/>
-      <rect x="207" y="160" width="13" height="52" rx="6" fill="${BASE}"/>
-      <rect x="224" y="160" width="13" height="52" rx="6" fill="${BASE}"/>
+      <rect x="207" y="160" width="13" height="52" rx="6" fill="${calves}"/>
+      <rect x="224" y="160" width="13" height="52" rx="6" fill="${calves}"/>
       <!-- shoulders (rear delts) -->
       <ellipse cx="196" cy="46" rx="12" ry="9" fill="${shoulder}"/>
       <ellipse cx="248" cy="46" rx="12" ry="9" fill="${shoulder}"/>
@@ -3934,7 +3945,7 @@ function renderData() {
     </div>
 
     <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">
-      Lift Log · V-1.24
+      Lift Log · V-1.25
     </div>
   `;
 
